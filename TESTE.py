@@ -1,4 +1,10 @@
 
+curl -s -H "Authorization: Bearer $TOKEN" \
+  https://SEU_AWX/api/v2/jobs/<JOB_ID>/ \
+| jq '{id, name, created, launch_type,
+       created_by: .summary_fields.created_by?.username,
+       unified_job_template: .summary_fields.unified_job_template?.name}
+
 Job ID
 995705
 Status
