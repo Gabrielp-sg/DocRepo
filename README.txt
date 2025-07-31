@@ -3,3 +3,7 @@
 /cluster-services/production/ @infrastructure-admins
 /clusters/production/ @infrastructure-admins
 https://gitlab.core-services.leaseplan.systems/groups/management/0072-wkl-lpbr-apps/workload_groups/infrastructure-admins
+
+/apps/production/             @management/0072-wkl-lpbr-apps/workload_groups/infrastructure-admins
+/cluster-services/production/ @management/0072-wkl-lpbr-apps/workload_groups/infrastructure-admins
+/clusters/production/         @management/0072-wkl-lpbr-apps/workload_groups/infrastructure-admins
