@@ -1,54 +1,35 @@
-
-curl -s -H "Authorization: Bearer $TOKEN" \
-  https://SEU_AWX/api/v2/jobs/<JOB_ID>/ \
-| jq '{id, name, created, launch_type,
-       created_by: .summary_fields.created_by?.username,
-       unified_job_template: .summary_fields.unified_job_template?.name}
-
-Job ID
-995705
-Status
-Successful
-Started
-31/07/2025, 16:30:44
-Finished
-31/07/2025, 16:38:06
-Job Template
-0072-wkl-d-lpbr-apps-lpfat-linux
-Job Type
-Playbook Run
-Launched By
-0072-wkl-d-automation-user
-Inventory
-0072-wkl-d-lpbr-apps-lpfat
-Project
-0072-wkl-lpbr-apps-lpfat
-Project Update Status
-Successful
-Source Control Branch
-WLDOPT-2515-lpfat-development
-Revision
-bdda9b9dd97a6998821c1189c81c5617183f8d1d
-Playbook
-callback.yml
-Verbosity
-0 (Normal)
-Execution Environment
-LeasePlan LZ Default Execution Environment (ansible core v2.12)
-Controller Node
-awx-v2-7b4d87d6cb-9wqlw
-Container Group
-default
-Job Slice
-0/1
-Forks
-0
-Timeout
-No timeout specified
-Credentials
-Cloud: 0072-d-aws-ssm
-Cloud: 0072-d-vault-token
-Created
-31/07/2025, 16:30:16 by 0072-wkl-d-automation-user
-Last Modified
-31/07/2025, 16:30:44
+{
+  "name": "0072-wkl-d-lpbr-apps-lpfat-linux",
+  "description": "0072-wkl-d-lpbr-apps-lpfat",
+  "job_type": "run",
+  "inventory": "0072-wkl-d-lpbr-apps-lpfat-2073",
+  "project": "0072-wkl-lpbr-apps-lpfat-3869",
+  "playbook": "callback.yml",
+  "scm_branch": "WLDOPT-2515-lpfat-development",
+  "forks": 0,
+  "limit": "",
+  "verbosity": 0,
+  "extra_vars": "{\"instance_id\": \"i-04b6025e279b53acd\", \"target\": \"ec2-0072-d-sae1-lpfat-lp\", \"tasks\": [\"install_lpfat_tools\"]}",
+  "job_tags": "",
+  "force_handlers": false,
+  "skip_tags": "",
+  "start_at_task": "",
+  "timeout": 0,
+  "use_fact_cache": false,
+  "execution_environment": "LeasePlan LZ Default Execution Environment (ansible core v2.12)-1",
+  "job_template": "0072-wkl-d-lpbr-apps-lpfat-linux-4373",
+  "allow_simultaneous": false,
+  "instance_group": null,
+  "diff_mode": true,
+  "job_slice_number": 0,
+  "job_slice_count": 1,
+  "webhook_service": "",
+  "webhook_credential": null,
+  "webhook_guid": "",
+  "id": 996691,
+  "credentials": [
+    "0072-d-aws-ssm (1568)",
+    "0072-d-vault-token (1567)"
+  ],
+  "labels": []
+}
