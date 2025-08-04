@@ -1,0 +1,45 @@
+aws.applicationelb.healthy_host_count:
+  name: alb.healthy_host_count - {host}
+  priority: 3
+  trigger: "<= 0"
+  period: 5m
+  spaceagg: sum
+  timeagg: sum
+  message: Healthy hosts is 0.
+  metric_math: a
+  metric:
+    a: aws.applicationelb.healthy_host_count
+  multi: host
+  function: weighted()
+  filters: leaseplan_workload:lpworkload,leaseplan_environment:lpenv,leaseplan_project:lpproject
+  optional_settings:
+    evaluation_delay: 900
+    require_full_window: false
+
+aws.applicationelb.httpcode_target_5xx:
+  name: alb.httpcode_target_5xx - {host}
+  priority: 3
+  trigger: "> 5"
+  period: 15m
+  spaceagg: sum
+  timeagg: sum
+  message: Backend 5XX errors are non-zero.
+  metric_math: a
+  metric:
+    a: aws.applicationelb.httpcode_target_5xx
+  multi: host
+  filters: leaseplan_workload:lpworkload,leaseplan_environment:lpenv,leaseplan_project:lpproject
+
+aws.applicationelb.httpcode_elb_5xx:
+  name: alb.httpcode_elb_5xx - {host}
+  priority: 3
+  trigger: "> 5"
+  period: 15m
+  spaceagg: sum
+  timeagg: sum
+  message: The ALB is generation 5XX errors itself. This can indicate a problem with the ALB.
+  metric_math: a
+  metric:
+    a: aws.applicationelb.httpcode_elb_5xx
+  multi: host
+  filters: leaseplan_workload:lpworkload,leaseplan_environment:lpenv,leaseplan_project:lpproject

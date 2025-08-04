@@ -1,0 +1,9 @@
+.. :changelog:
+
+History
+-------
+
+0.0.0 (YYYY-MM-DD)
+---------------------
+
+* First release

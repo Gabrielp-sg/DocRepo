@@ -1,0 +1,30 @@
+aws.ebs.volume_queue_length:
+  name: ebs.volume_queue_length - {volume-id}
+  priority: 3
+  trigger: ">5"
+  period: 15m
+  spaceagg: max
+  timeagg: min
+  message: This EBS volume has a long queue, indicating an IO bottleneck. This is likely impacting performance.
+  metric_math: a
+  metric:
+    a: aws.ebs.volume_queue_length
+  multi: volume-id
+  filters: leaseplan_workload:lpworkload,leaseplan_environment:lpenv,leaseplan_project:lpproject
+
+aws.ebs.status.ok:
+  name: aws.ebs.status.ok - EBS Status Check Failed - {volume-id}
+  priority: 3
+  trigger: "< 1"
+  period: 5m
+  spaceagg: max
+  timeagg: max
+  message: EBS status check has failed.
+  metric_math: a
+  metric:
+    a: aws.ebs.status.ok
+  multi: volume-id
+  filters: leaseplan_workload:lpworkload,leaseplan_environment:lpenv,leaseplan_project:lpproject
+  optional_settings:
+    evaluation_delay: 900
+    require_full_window: false
