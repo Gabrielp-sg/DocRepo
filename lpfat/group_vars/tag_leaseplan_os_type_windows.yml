@@ -1,0 +1,9 @@
+---
+# you need to set the ansible_shell_type on windows to powershell!
+ansible_shell_type: powershell
+
+# these variables are used in the windows configuration step.
+remote_desktop_users:
+# add your admin account(s) here
+local_administrators:
+# add your admin account(s) here

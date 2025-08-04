@@ -1,0 +1,17 @@
+---
+# here some exampels on how to join the domain by using a role and how to setup rdp access.
+- name: join the domain
+  include_role:
+    name: 'domain_join'
+
+- name: set remote desktop users
+  win_group_membership:
+    name: remote desktop users
+    members: "{{ remote_desktop_users }}"
+    state: present
+
+- name: set local admins
+  win_group_membership:
+    name: administrators
+    members: "{{ local_administrators }}"
+    state: present
