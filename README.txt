@@ -1,17 +1,197 @@
-# Groups members for production sub directories
-/apps/production/ @infrastructure-admins
-/cluster-services/production/ @infrastructure-admins
-/clusters/production/ @infrastructure-admins
-https://gitlab.core-services.leaseplan.systems/groups/management/0072-wkl-lpbr-apps/workload_groups/infrastructure-admins
+- name: Debug Linux configuration - start
+  debug:
+    msg: "--------------- Linux configuration started ---------------"
 
-/apps/production/             @management/0072-wkl-lpbr-apps/workload_groups/infrastructure-admins
-/cluster-services/production/ @management/0072-wkl-lpbr-apps/workload_groups/infrastructure-admins
-/clusters/production/         @management/0072-wkl-lpbr-apps/workload_groups/infrastructure-admins
+- name: Upgrade all packages
+  yum:
+    name: "*"
+    state: latest
+  ignore_errors: true
+  become: true
 
- curl -s -H "Authorization: Bearer $TOKEN" https://awx.core-services.leaseplan.systems/#/jobs/playbook/995705
-<!doctype html><html lang="en"><head><script nonce="LwYKeS1lgZSrXz65oye+pTaEKew29pNgxfxc6ivzDYQ=" type="text/javascript">window.NONCE_ID="LwYKeS1lgZSrXz65oye+pTaEKew29pNgxfxc6ivzDYQ="</script><meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' ws: wss:; style-src 'self' 'unsafe-inline'; script-src 'self' 'nonce-LwYKeS1lgZSrXz65oye+pTaEKew29pNgxfxc6ivzDYQ=' *.pendo.io; img-src 'self' *.pendo.io data:; worker-src 'self' blob: ;"/><link rel="shortcut icon" href="/static/media/favicon.ico"/><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="theme-color" content="#000000"/><meta name="description" content="AWX"/><script defer="defer" src="./static/js/main.f71c4091.js"></script><link href="./static/css/main.0c31d64b.css" rel="stylesheet"></head><body><noscript>You need to enable JavaScript to run this app.</noscript><style nonce="LwYKeS1lgZSrXz65oye+pTaEKew29pNgxfxc6ivzDYQ=">.app{height:100%}</style><div id="app" class="app"></div></body></html>
+- name: Install sshpass
+  yum:
+    name: 
+      - sshpass
+      - fontconfig
+    state: present
+  ignore_errors: true
+  become: true
+
+- name: Change instance timezone
+  shell: |
+    timedatectl set-timezone America/Sao_Paulo
+  become: true
 
 
-curl -s -c cookies.txt -H 'Content-Type: application/json' \
-  -d '{"username":"USUARIO","password":"SENHA"}' \
-  https://awx.core-services.leaseplan.systems/api/login/
+- name: This command will install jfrog cli
+  shell: |
+    curl -fL https://install-cli.jfrog.io | sh
+  args:
+    chdir: /var/tmp
+  become: true
+  become_user: root
+
+- name: Fetch OpenJDK Corretto 22 from jfrog
+  get_url:
+    url: "{{ artifactory_url }}/{{ wkl_virt_repo_name }}/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm"
+    url_username: "art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default"
+    url_password: "{{ lookup('hashi_vault', 'secret=artifactory/token/art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default:access_token url={{ vault_url }}') }}"
+    dest: /tmp/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm
+
+
+- name: Install OpenJDK Corretto 22
+  yum:
+    name: /tmp/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm
+    state: present
+    disable_gpg_check: true
+  become: true
+
+- name: Fetch the Apache Tomcat installer
+  get_url:
+    url: "{{ artifactory_url }}/{{ wkl_virt_repo_name }}/apache-tomcat-10.1.30.tar.gz"
+    url_username: "art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default"
+    url_password: "{{ lookup('hashi_vault', 'secret=artifactory/token/art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default:access_token url={{ vault_url }}') }}"
+    dest: /opt/apache-tomcat-10.1.30.tar.gz
+  become: true
+
+- name: Unzip Tomcat 10
+  unarchive:
+    src: /opt/apache-tomcat-10.1.30.tar.gz
+    dest: /opt
+    remote_src: yes
+  become: true
+
+- name: Rename Tomcat folder
+  shell: | 
+   [ -d /opt/tomcat10 ] || mv /opt/apache-tomcat-10.1.30 /opt/tomcat10
+  become: true
+
+- name: Create Tomcat user
+  user:
+    name: tomcat
+    shell: /bin/bash
+    create_home: no
+    state: present
+  become: true
+
+- name: Copy tomcat users file
+  copy:
+    src: ./files/tomcat-users.xml.j2
+    dest: /opt/tomcat10/conf/tomcat-users.xml
+    mode: 0755
+    force: false
+  become: true
+
+- name: Install LPFat application fonts
+  get_url:
+    url: "{{ artifactory_url }}/{{ wkl_virt_repo_name }}/LPFat/lpfat_fonts.zip"
+    url_username: "art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default"
+    url_password: "{{ lookup('hashi_vault', 'secret=artifactory/token/art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default:access_token url={{ vault_url }}') }}"
+    dest: /tmp/lpfat_fonts.zip
+
+- name: Create folder for the application fonts
+  file:
+    path: /opt/tomcat10/fonts/
+    state: directory
+  become: true
+
+- name: Unzip fonts file
+  unarchive:
+    src: /tmp/lpfat_fonts.zip
+    dest: /opt/tomcat10/fonts/
+    remote_src: yes
+  become: true
+
+- name: Create symbolic links for the tomcat scripts
+  shell: | 
+    [ -L /bin/tomcatup ] || ln -s /opt/tomcat10/bin/startup.sh /bin/tomcatup ; [ -L /bin/tomcatdown ] || ln -s /opt/tomcat10/bin/shutdown.sh /bin/tomcatdown
+  args:
+    chdir: /opt/tomcat10
+  become: true    
+
+- name: Stop tomcat
+  shell: | 
+    tomcatdown
+  become: true
+  become_user: tomcat
+  ignore_errors: true
+  
+- name: Cleanup the tomcat and the temp folders
+  shell: |
+    rm -rf /opt/tomcat10/webapps/*.war /opt/tomcat10/webapps/LpFat_* /tmp/*.war
+  become: true
+
+
+- name: Download war files from the vendor SFTP server
+  shell: |
+    url=$(aws secretsmanager get-secret-value --region sa-east-1 --secret-id sm-0072-d-lpfat-send-sftp-credentials| jq -r '.SecretString' | jq -r '.url' )
+    port=$(aws secretsmanager get-secret-value --region sa-east-1 --secret-id sm-0072-d-lpfat-send-sftp-credentials| jq -r '.SecretString' | jq -r '.port' )
+    username=$(aws secretsmanager get-secret-value --region sa-east-1 --secret-id sm-0072-d-lpfat-send-sftp-credentials| jq -r '.SecretString' | jq -r '.username' )
+    password=$(aws secretsmanager get-secret-value --region sa-east-1 --secret-id sm-0072-d-lpfat-send-sftp-credentials| jq -r '.SecretString' | jq -r '.password' )
+    SSHPASS=${password} sshpass -e sftp -o StrictHostKeyChecking=accept-new -P ${port} ${username}@${url} << ENDSFTP
+    cd releases/Desenvolvimento/
+    get *.war
+    quit
+    ENDSFTP
+  args:
+    chdir: /tmp/
+
+- name: Copy downloaded war files to the tomcat folder, if the files are new
+  shell: |
+    cp -u /tmp/*.war /opt/tomcat10/webapps/
+  become: true
+
+- name: Set LpFat S3 environment variables
+  lineinfile:
+    path: "/etc/environment"
+    state: present
+    line: "STORAGE_AWSS3_USE_IAM=true"
+  become: true
+
+- name: Change tomcat folder ownership
+  file:
+    path: /opt/tomcat10
+    state: directory
+    recurse: yes
+    owner: tomcat
+    group: tomcat
+
+- name: Start tomcat
+  shell: | 
+    tomcatup
+  become: true
+  become_user: tomcat
+
+- name: Create a shell script from the user-data.txt file
+  shell: |
+    cp /var/lib/cloud/instance/user-data.txt /tmp/user-data.sh && chmod +x /tmp/user-data.sh
+  become: true
+
+#- name: Create cron job for the AWX rerun
+#  cron:
+#    name: "Run the user-data script every hour"
+#    weekday: "*"
+#    minute: "30"
+#    hour: "*"
+#    job: "/tmp/user-data.sh > /dev/null"
+#    state: present
+#  become: true
+
+- name: Copy LPFat scheduler script
+  copy:
+    src: ./files/lpfat_scheduler.sh
+    dest: /tmp/lpfat_scheduler.sh
+    mode: 0755
+    force: false
+  become: true
+
+#- name: Create cron job for the LPFat application scheduler
+#  cron:
+#    name: "Run the LPFat scheduler script every minute"
+#    weekday: "*"
+#    minute: "1"
+#    hour: "*"
+#    job: "/tmp/lpfat_scheduler.sh > /tmp/lpfat_scheduler.log"
+#    state: present
+#  become: true
