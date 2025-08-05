@@ -1,161 +1,209 @@
-START="2025-07-23T11:45:00Z"
-END="2025-07-23T13:15:00Z"
-SECRET_ARN="<cole_o_arn_aqui>"
+/bin/sh: tomcatdown: command not found
 
-SELECT eventTime, eventName,
-       responseElements.versionId,
-       userIdentity.type AS userType,
-       userIdentity.arn  AS who,
-       sourceIPAddress,
-       userAgent
-FROM   aws_cloudtrail_events
-WHERE  eventSource = 'secretsmanager.amazonaws.com'
-  AND  eventName IN ('PutSecretValue','CreateSecret')
-  AND  responseElements.versionId IN (
-        'ad5a6337-9d7c-496e-adda-fda5cfd6c4f7', -- AWSPREVIOUS (12:03:26Z)
-        'f089c06f-46ae-4b01-945a-a03e7d89a5d0'  -- AWSCURRENT  (12:57:36Z)
-      )
-ORDER BY eventTime DESC;
+fatal: [ec2-0072-a-sae1-lpfat-lp]: FAILED! => {"changed": true, "cmd": "tomcatdown\n", "delta": "0:00:00.007329", "end": "2025-08-05 16:26:32.610426", "msg": "non-zero return code", "rc": 127, "start": "2025-08-05 16:26:32.603097", "stderr": "/bin/sh: tomcatdown: command not found", "stderr_lines": ["/bin/sh: tomcatdown: command not found"], "stdout": "", "stdout_lines": []}
+...ignoring
 
-SELECT eventTime, eventName,
-       responseElements.versionId,
-       userIdentity.arn, userAgent
-FROM   aws_cloudtrail_events
-WHERE  eventSource = 'secretsmanager.amazonaws.com'
-  AND  eventName IN ('PutSecretValue','CreateSecret')
-  AND  requestParameters.secretId LIKE '%lpfat-send-sftp-credentials%'
-  AND  eventTime BETWEEN '2025-07-23 12:00:00' AND '2025-07-23 13:10:00'
-ORDER BY eventTime;
+---
+# role locations can be defined here, note: always use version numbers! (tags)
+- src: https://gitlab.core-services.leaseplan.systems/shared/ansible_roles/domain_join.git
+  scm: git
+  version: "2.0.0"
 
 
-cat /tmp/ct.json | jq -r '
-  .Events[]
-  | select(.EventName=="PutSecretValue" or .EventName=="CreateSecret")
-  | .CloudTrailEvent
-' | jq -r '
-  fromjson
-  | {eventTime, eventName,
-     versionId: (.responseElements.versionId // .requestParameters.clientRequestToken),
-     user: .userIdentity.arn,
-     userType: .userIdentity.type,
-     userAgent,
-     sourceIP: .sourceIPAddress
-  }'
+- name: Debug Linux configuration - start
+  debug:
+    msg: "--------------- Linux configuration started ---------------"
+
+- name: Upgrade all packages
+  yum:
+    name: "*"
+    state: latest
+  ignore_errors: true
+  become: true
+
+- name: Install sshpass
+  yum:
+    name: 
+      - sshpass
+      - fontconfig
+    state: present
+  ignore_errors: true
+  become: true
+
+- name: Change instance timezone
+  shell: |
+    timedatectl set-timezone America/Sao_Paulo
+  become: true
 
 
+- name: This command will install jfrog cli
+  shell: |
+    curl -fL https://install-cli.jfrog.io | sh
+  args:
+    chdir: /var/tmp
+  become: true
+  become_user: root
+
+- name: Fetch OpenJDK Corretto 22 from jfrog
+  get_url:
+    url: "{{ artifactory_url }}/{{ wkl_virt_repo_name }}/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm"
+    url_username: "art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default"
+    url_password: "{{ lookup('hashi_vault', 'secret=artifactory/token/art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default:access_token url={{ vault_url }}') }}"
+    dest: /tmp/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm
 
 
+- name: Install OpenJDK Corretto 22
+  yum:
+    name: /tmp/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm
+    state: present
+    disable_gpg_check: true
+  become: true
+
+- name: Fetch the Apache Tomcat installer
+  get_url:
+    url: "{{ artifactory_url }}/{{ wkl_virt_repo_name }}/apache-tomcat-10.1.30.tar.gz"
+    url_username: "art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default"
+    url_password: "{{ lookup('hashi_vault', 'secret=artifactory/token/art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default:access_token url={{ vault_url }}') }}"
+    dest: /opt/apache-tomcat-10.1.30.tar.gz
+  become: true
+
+- name: Unzip Tomcat 10
+  unarchive:
+    src: /opt/apache-tomcat-10.1.30.tar.gz
+    dest: /opt
+    remote_src: yes
+  become: true
+
+- name: Rename Tomcat folder
+  shell: | 
+   [ -d /opt/tomcat10 ] || mv /opt/apache-tomcat-10.1.30 /opt/tomcat10
+  become: true
+
+- name: Create Tomcat user
+  user:
+    name: tomcat
+    shell: /bin/bash
+    create_home: no
+    state: present
+  become: true
+
+- name: Copy tomcat users file
+  copy:
+    src: ./files/tomcat-users.xml.j2
+    dest: /opt/tomcat10/conf/tomcat-users.xml
+    mode: 0755
+    force: false
+  become: true
+
+- name: Install LPFat application fonts
+  get_url:
+    url: "{{ artifactory_url }}/{{ wkl_virt_repo_name }}/LPFat/lpfat_fonts.zip"
+    url_username: "art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default"
+    url_password: "{{ lookup('hashi_vault', 'secret=artifactory/token/art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default:access_token url={{ vault_url }}') }}"
+    dest: /tmp/lpfat_fonts.zip
+
+- name: Create folder for the application fonts
+  file:
+    path: /opt/tomcat10/fonts/
+    state: directory
+  become: true
+
+- name: Unzip fonts file
+  unarchive:
+    src: /tmp/lpfat_fonts.zip
+    dest: /opt/tomcat10/fonts/
+    remote_src: yes
+  become: true
+
+- name: Create symbolic links for the tomcat scripts
+  shell: | 
+    [ -L /bin/tomcatup ] || ln -s /opt/tomcat10/bin/startup.sh /bin/tomcatup ; [ -L /bin/tomcatdown ] || ln -s /opt/tomcat10/bin/shutdown.sh /bin/tomcatdown
+  args:
+    chdir: /opt/tomcat10
+  become: true    
+
+- name: Stop tomcat
+  shell: | 
+    tomcatdown
+  become: true
+  become_user: tomcat
+  ignore_errors: true
+  
+- name: Cleanup the tomcat and the temp folders
+  shell: |
+    rm -rf /opt/tomcat10/webapps/*.war /opt/tomcat10/webapps/LpFat_* /tmp/*.war
+  become: true
 
 
+- name: Download war files from the vendor SFTP server
+  shell: |
+    url=$(aws secretsmanager get-secret-value --region sa-east-1 --secret-id {{ secret_id }} | jq -r '.SecretString' | jq -r '.url' )
+    port=$(aws secretsmanager get-secret-value --region sa-east-1 --secret-id {{ secret_id }} | jq -r '.SecretString' | jq -r '.port' )
+    username=$(aws secretsmanager get-secret-value --region sa-east-1 --secret-id {{ secret_id }} | jq -r '.SecretString' | jq -r '.username' )
+    password=$(aws secretsmanager get-secret-value --region sa-east-1 --secret-id {{ secret_id }} | jq -r '.SecretString' | jq -r '.password' )
+    SSHPASS=${password} sshpass -e sftp -o StrictHostKeyChecking=accept-new -P ${port} ${username}@${url} << ENDSFTP
+    cd releases/Desenvolvimento/
+    get *.war
+    quit
+    ENDSFTP
+  args:
+    chdir: /tmp/
 
+- name: Copy downloaded war files to the tomcat folder, if the files are new
+  shell: |
+    cp -u /tmp/*.war /opt/tomcat10/webapps/
+  become: true
 
+- name: Set LpFat S3 environment variables
+  lineinfile:
+    path: "/etc/environment"
+    state: present
+    line: "STORAGE_AWSS3_USE_IAM=true"
+  become: true
 
+- name: Change tomcat folder ownership
+  file:
+    path: /opt/tomcat10
+    state: directory
+    recurse: yes
+    owner: tomcat
+    group: tomcat
 
-ERROR! The field 'hosts' has an invalid value, which includes an undefined variable. The error was: 'target' is undefined
-The error appears to be in '/runner/project/callback.yml': line 1, column 3, but may
-be elsewhere in the file depending on the exact syntax problem.
-The offending line appears to be:
-- hosts:  "{{ target }}"
-  ^ here
-We could be wrong, but this one looks like it might be an issue with
-missing quotes. Always quote template expression brackets when they
-start a value. For instance:
-    with_items:
-      - {{ foo }}
-Should be written as:
-    with_items:
-      - "{{ foo }}"
+- name: Start tomcat
+  shell: | 
+    tomcatup
+  become: true
+  become_user: tomcat
 
-- hosts:  "{{ target }}"
-  gather_facts: yes
-  vars:
-    ansible_aws_ssm_instance_id : "{{ instance_id }}"
-  tasks:
-    - name: "Install LPFAT required tools"
-      include_tasks: "tasks/install_lpfat_tools.yml"
-\resource "aws_secretsmanager_secret" "send_sftp_credentials" {
-  name = format("sm-%s-%s-lpfat-send-sftp-credentials", local.workload_index, local.environment_identifier)
-  tags = local.tags
-}
-Version ID
-	
-Staging labels
-	
-Last accessed
-	
-Created on (UTC)
+- name: Create a shell script from the user-data.txt file
+  shell: |
+    cp /var/lib/cloud/instance/user-data.txt /tmp/user-data.sh && chmod +x /tmp/user-data.sh
+  become: true
 
-ad5a6337-9d7c-496e-adda-fda5cfd6c4f7
-AWSPREVIOUS
-23 July 2025
-23 July 2025 at 12:03:26
-f089c06f-46ae-4b01-945a-a03e7d89a5d0
-AWSCURRENT
-5 August 2025
-23 July 2025 at 12:57:36
+#- name: Create cron job for the AWX rerun
+#  cron:
+#    name: "Run the user-data script every hour"
+#    weekday: "*"
+#    minute: "30"
+#    hour: "*"
+#    job: "/tmp/user-data.sh > /dev/null"
+#    state: present
+#  become: true
 
-# data "aws_secretsmanager_secret_version" "send_sftp_secret_value" {
-#   secret_id = aws_secretsmanager_secret.send_sftp_credentials.name
-# }
+- name: Copy LPFat scheduler script
+  copy:
+    src: ./files/lpfat_scheduler.sh
+    dest: /tmp/lpfat_scheduler.sh
+    mode: 0755
+    force: false
+  become: true
 
-# # data "archive_file" "sftp_lambda_libs" {
-# #   type = "zip"
-# #   source_dir = "${path.module}/lambdas/layers/sftp/"
-# #   output_path = "${path.module}/lambdas/zip/sftp.zip"
-# # }
-
-# module "aws_lambda_fetch_from_sftp" {
-#   source = "git@gitlab.core-services.leaseplan.systems:shared/terraform_modules/aws/aws-lambda.git?ref=v5.1.1"
-
-#   function_name                     = format("lambda-%s-%s-sae1-lpfat-sftp", local.workload_number, local.environment_identifier)
-#   description                       = "Lambda that fetches the packages from the vendor SFTP server"
-#   handler                           = "fetch_from_sftp.lambda_handler"
-#   runtime                           = "python3.9"
-#   lambda_package_contents           = "${path.module}/lambdas/code/sftp/" # path of your lambda code or lambda code with dependency in the repo
-#   memory_size                       = 256
-#   timeout                           = 900
-#   publish                           = false
-#   cloudwatch_logs_retention_in_days = 30
-#   create_lambda_package             = true
-#   create_lambda_layer_package       = true
-#   create_lambda_layer               = true
-#   lambda_layer_contents             = "${path.module}/lambdas/layers/sftp/" # path of your lambda layer dependency in the repo
-#   lambda_layer_name                 = "lambdalayer"
-
-
-#   ephemeral_storage = {
-#     size = 512
-#   }
-
-#   iam_role = {
-#     name = "role-0072-d-dev-lpfat-trigger"
-#   }
-
-#   environment = {
-#     variables = {
-#       sftp_url    = jsondecode(data.aws_secretsmanager_secret_version.send_sftp_secret_value.secret_string)["url"]
-#       sftp_port   = jsondecode(data.aws_secretsmanager_secret_version.send_sftp_secret_value.secret_string)["port"]
-#       sftp_user   = jsondecode(data.aws_secretsmanager_secret_version.send_sftp_secret_value.secret_string)["username"]
-#       sftp_pass   = jsondecode(data.aws_secretsmanager_secret_version.send_sftp_secret_value.secret_string)["password"]
-#       sftp_folder = local.environment_identifier
-#     }
-#   }
-
-#   tags = local.tags
-# }
-
-# resource "aws_scheduler_schedule" "trigger_lpfat_lambda" {
-#   name       = format("schedule-%s-%s-sae1-lpfat-lambda", local.workload_number, local.environment_identifier)
-#   group_name = "default"
-
-#   flexible_time_window {
-#     mode = "OFF"
-#   }
-
-#   schedule_expression = "rate(30 minutes)"
-
-#   target {
-#     arn      = module.aws_lambda_fetch_from_sftp.lambda_function_arn
-#     role_arn = aws_iam_role.scheduler-lpfat-lambda-role.arn
-#   }
-# }
+#- name: Create cron job for the LPFat application scheduler
+#  cron:
+#    name: "Run the LPFat scheduler script every minute"
+#    weekday: "*"
+#    minute: "1"
+#    hour: "*"
+#    job: "/tmp/lpfat_scheduler.sh > /tmp/lpfat_scheduler.log"
+#    state: present
+#  become: true
