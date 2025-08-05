@@ -20,3 +20,7 @@ Should be written as:
   tasks:
     - name: "Install LPFAT required tools"
       include_tasks: "tasks/install_lpfat_tools.yml"
+\resource "aws_secretsmanager_secret" "send_sftp_credentials" {
+  name = format("sm-%s-%s-lpfat-send-sftp-credentials", local.workload_index, local.environment_identifier)
+  tags = local.tags
+}
