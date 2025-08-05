@@ -24,7 +24,22 @@ Should be written as:
   name = format("sm-%s-%s-lpfat-send-sftp-credentials", local.workload_index, local.environment_identifier)
   tags = local.tags
 }
+Version ID
+	
+Staging labels
+	
+Last accessed
+	
+Created on (UTC)
 
+ad5a6337-9d7c-496e-adda-fda5cfd6c4f7
+AWSPREVIOUS
+23 July 2025
+23 July 2025 at 12:03:26
+f089c06f-46ae-4b01-945a-a03e7d89a5d0
+AWSCURRENT
+5 August 2025
+23 July 2025 at 12:57:36
 
 # data "aws_secretsmanager_secret_version" "send_sftp_secret_value" {
 #   secret_id = aws_secretsmanager_secret.send_sftp_credentials.name
