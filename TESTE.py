@@ -1,3 +1,36 @@
+START="2025-07-23T11:45:00Z"
+END="2025-07-23T13:15:00Z"
+SECRET_ARN="<cole_o_arn_aqui>"
+
+aws cloudtrail lookup-events \
+  --lookup-attributes AttributeKey=ResourceName,AttributeValue="$SECRET_ARN" \
+  --start-time "$START" --end-time "$END" \
+  --max-results 50 > /tmp/ct.json
+
+
+cat /tmp/ct.json | jq -r '
+  .Events[]
+  | select(.EventName=="PutSecretValue" or .EventName=="CreateSecret")
+  | .CloudTrailEvent
+' | jq -r '
+  fromjson
+  | {eventTime, eventName,
+     versionId: (.responseElements.versionId // .requestParameters.clientRequestToken),
+     user: .userIdentity.arn,
+     userType: .userIdentity.type,
+     userAgent,
+     sourceIP: .sourceIPAddress
+  }'
+
+
+
+
+
+
+
+
+
+
 ERROR! The field 'hosts' has an invalid value, which includes an undefined variable. The error was: 'target' is undefined
 The error appears to be in '/runner/project/callback.yml': line 1, column 3, but may
 be elsewhere in the file depending on the exact syntax problem.
