@@ -2,11 +2,20 @@ START="2025-07-23T11:45:00Z"
 END="2025-07-23T13:15:00Z"
 SECRET_ARN="<cole_o_arn_aqui>"
 
-aws cloudtrail lookup-events \
-  --lookup-attributes AttributeKey=ResourceName,AttributeValue="$SECRET_ARN" \
-  --start-time "$START" --end-time "$END" \
-  --max-results 50 > /tmp/ct.json
-
+SELECT eventTime, eventName,
+       responseElements.versionId,
+       userIdentity.type AS userType,
+       userIdentity.arn  AS who,
+       sourceIPAddress,
+       userAgent
+FROM   aws_cloudtrail_events
+WHERE  eventSource = 'secretsmanager.amazonaws.com'
+  AND  eventName IN ('PutSecretValue','CreateSecret')
+  AND  responseElements.versionId IN (
+        'ad5a6337-9d7c-496e-adda-fda5cfd6c4f7', -- AWSPREVIOUS (12:03:26Z)
+        'f089c06f-46ae-4b01-945a-a03e7d89a5d0'  -- AWSCURRENT  (12:57:36Z)
+      )
+ORDER BY eventTime DESC;
 
 cat /tmp/ct.json | jq -r '
   .Events[]
