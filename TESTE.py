@@ -17,6 +17,17 @@ WHERE  eventSource = 'secretsmanager.amazonaws.com'
       )
 ORDER BY eventTime DESC;
 
+SELECT eventTime, eventName,
+       responseElements.versionId,
+       userIdentity.arn, userAgent
+FROM   aws_cloudtrail_events
+WHERE  eventSource = 'secretsmanager.amazonaws.com'
+  AND  eventName IN ('PutSecretValue','CreateSecret')
+  AND  requestParameters.secretId LIKE '%lpfat-send-sftp-credentials%'
+  AND  eventTime BETWEEN '2025-07-23 12:00:00' AND '2025-07-23 13:10:00'
+ORDER BY eventTime;
+
+
 cat /tmp/ct.json | jq -r '
   .Events[]
   | select(.EventName=="PutSecretValue" or .EventName=="CreateSecret")
