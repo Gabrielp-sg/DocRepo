@@ -1,3 +1,33 @@
+- set_fact:
+    artifactory_access_token: "{{ lookup('community.hashi_vault.hashi_vault', 'url=' ~ vault_url ~ ' secret=' ~ artifactory_reader_token_path ~ ':access_token') }}"
+
+- name: Fetch OpenJDK Corretto 22 from jfrog (Bearer)
+  ansible.builtin.get_url:
+    url: "{{ artifactory_url }}/{{ wkl_virt_repo_name }}/{{ corretto_pkg }}"
+    headers:
+      Authorization: "Bearer {{ artifactory_access_token }}"
+    dest: "/tmp/{{ corretto_pkg }}"
+    validate_certs: true
+
+- name: Fetch the Apache Tomcat installer (Bearer)
+  ansible.builtin.get_url:
+    url: "{{ artifactory_url }}/{{ wkl_virt_repo_name }}/apache-tomcat-{{ tomcat_version }}.tar.gz"
+    headers:
+      Authorization: "Bearer {{ artifactory_access_token }}"
+    dest: "{{ tomcat_archive }}"
+    validate_certs: true
+  become: true
+
+- name: Install LPFat application fonts (Bearer)
+  ansible.builtin.get_url:
+    url: "{{ artifactory_url }}/{{ wkl_virt_repo_name }}/LPFat/lpfat_fonts.zip"
+    headers:
+      Authorization: "Bearer {{ artifactory_access_token }}"
+    dest: "/tmp/lpfat_fonts.zip"
+    validate_certs: true
+
+
+
 url_password: "{{ lookup('community.hashi_vault.hashi_vault', 'url=' ~ vault_url ~ ' secret=' ~ artifactory_reader_token_path ~ ' key=access_token') }}"
 url_password: "{{ lookup('community.hashi_vault.hashi_vault', 'url=' ~ vault_url ~ ' secret=' ~ artifactory_reader_token_path ~ ' key=access_token') }}"
 url_password: "{{ lookup('community.hashi_vault.hashi_vault', 'url=' ~ vault_url ~ ' secret=' ~ artifactory_reader_token_path ~ ' key=access_token') }}"
