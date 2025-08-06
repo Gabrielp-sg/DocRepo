@@ -1,3 +1,6 @@
+TASK [Start tomcat] ************************************************************
+fatal: [ec2-0072-a-sae1-lpfat-lp]: FAILED! => {"changed": false, "msg": "Could not find the requested service tomcat: host"}
+
 - set_fact:
     artifactory_access_token: "{{ lookup('community.hashi_vault.hashi_vault', 'url=' ~ vault_url ~ ' secret=' ~ artifactory_reader_token_path ~ ':access_token') }}"
 
