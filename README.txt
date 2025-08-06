@@ -1,3 +1,10 @@
+[DEPRECATION WARNING]: The default value for 'token_validate' will change from 
+True to False. This feature will be removed from community.hashi_vault in 
+version 4.0.0. Deprecation warnings can be disabled by setting 
+deprecation_warnings=False in ansible.cfg.
+
+
+
 - hosts: "{{ target }}"
   gather_facts: yes
   vars:
