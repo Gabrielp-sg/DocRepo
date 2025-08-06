@@ -1,90 +1,48 @@
-TASK [Start tomcat] ************************************************************
-fatal: [ec2-0072-a-sae1-lpfat-lp]: FAILED! => {"changed": false, "msg": "Could not find the requested service tomcat: host"}
-
-- set_fact:
-    artifactory_access_token: "{{ lookup('community.hashi_vault.hashi_vault', 'url=' ~ vault_url ~ ' secret=' ~ artifactory_reader_token_path ~ ':access_token') }}"
-
-- name: Fetch OpenJDK Corretto 22 from jfrog (Bearer)
-  ansible.builtin.get_url:
-    url: "{{ artifactory_url }}/{{ wkl_virt_repo_name }}/{{ corretto_pkg }}"
-    headers:
-      Authorization: "Bearer {{ artifactory_access_token }}"
-    dest: "/tmp/{{ corretto_pkg }}"
-    validate_certs: true
-
-- name: Fetch the Apache Tomcat installer (Bearer)
-  ansible.builtin.get_url:
-    url: "{{ artifactory_url }}/{{ wkl_virt_repo_name }}/apache-tomcat-{{ tomcat_version }}.tar.gz"
-    headers:
-      Authorization: "Bearer {{ artifactory_access_token }}"
-    dest: "{{ tomcat_archive }}"
-    validate_certs: true
-  become: true
-
-- name: Install LPFat application fonts (Bearer)
-  ansible.builtin.get_url:
-    url: "{{ artifactory_url }}/{{ wkl_virt_repo_name }}/LPFat/lpfat_fonts.zip"
-    headers:
-      Authorization: "Bearer {{ artifactory_access_token }}"
-    dest: "/tmp/lpfat_fonts.zip"
-    validate_certs: true
-
-
-
-url_password: "{{ lookup('community.hashi_vault.hashi_vault', 'url=' ~ vault_url ~ ' secret=' ~ artifactory_reader_token_path ~ ' key=access_token') }}"
-url_password: "{{ lookup('community.hashi_vault.hashi_vault', 'url=' ~ vault_url ~ ' secret=' ~ artifactory_reader_token_path ~ ' key=access_token') }}"
-url_password: "{{ lookup('community.hashi_vault.hashi_vault', 'url=' ~ vault_url ~ ' secret=' ~ artifactory_reader_token_path ~ ' key=access_token') }}"
-
 {
-  "status_code": 401,
-  "response": "HTTP Error 401: ",
-  "url": "https://leaseplan.jfrog.io/artifactory/art-0072-generic-virtual/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm",
-  "dest": "/tmp/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm",
-  "elapsed": 1,
-  "msg": "Request failed",
-  "uid": 0,
-  "gid": 0,
-  "owner": "root",
-  "group": "root",
-  "mode": "0644",
-  "state": "file",
-  "secontext": "system_u:object_r:user_home_t:s0",
-  "size": 207530234,
+  "msg": "Could not find the requested service tomcat: host",
   "invocation": {
     "module_args": {
-      "url": "https://leaseplan.jfrog.io/artifactory/art-0072-generic-virtual/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm",
-      "url_username": "VALUE_SPECIFIED_IN_NO_LOG_PARAMETER",
-      "url_password": "{'access_token': '********', 'expires_in': ********, 'reference_token': '', 'refresh_token': '', 'role': '********', 'scope': 'applied-permissions/groups:********', 'token_id': '********', 'username': '********'}",
-      "dest": "/tmp/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm",
-      "force": false,
-      "http_agent": "ansible-httpget",
-      "use_proxy": true,
-      "validate_certs": true,
-      "force_basic_auth": false,
-      "use_gssapi": false,
-      "backup": false,
-      "sha256sum": "",
-      "checksum": "",
-      "timeout": 10,
-      "unredirected_headers": [],
-      "unsafe_writes": false,
-      "client_cert": null,
-      "client_key": null,
-      "headers": null,
-      "tmp_dest": null,
-      "mode": null,
-      "owner": null,
-      "group": null,
-      "seuser": null,
-      "serole": null,
-      "selevel": null,
-      "setype": null,
-      "attributes": null
+      "name": "tomcat",
+      "state": "restarted",
+      "daemon_reload": false,
+      "daemon_reexec": false,
+      "scope": "system",
+      "no_block": false,
+      "enabled": null,
+      "force": null,
+      "masked": null
     }
   },
   "_ansible_no_log": false,
   "changed": false
 }
+fatal: [ec2-0072-a-sae1-lpfat-lp]: FAILED! => {"changed": false, "msg": "Could not find the requested service tomcat: host"}
+---
+# this is the defaulf configuration for ansible to work with ssm.
+ansible_user: 'ssm-user'
+ansible_connection: aws_ssm
+ansible_aws_ssm_region: sa-east-1 
+ansible_ssm_retry: 8
+ansible_aws_ssm_timeout: 360
+
+# here some variables that are needed for the domain join and can be used for other purposes.
+aws_region: sa-east-1
+workload_name: 0072-wkl-lpbr-apps
+project_name: lpfat
+artifactory_token: "artifactory/token/art-0072-read-generic-local-default"
+artifactory_url: "https://leaseplan.jfrog.io/artifactory"
+wkl_virt_repo_name: "art-{{ workload_name.split(\"-\")[0] }}-generic-virtual"
+artifactory_bearer_token: "{{ lookup('hashi_vault', 'secret=artifactory/token/art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default:access_token url={{ vault_url }}') }}"
+vault_url: "https://vault.core-services.leaseplan.systems"
+jfrog_installer: "/var/tmp/install-jfrog-cli.sh"
+corretto_pkg: "java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm"
+tomcat_version: "10.1.30"
+tomcat_archive: "/opt/apache-tomcat-{{ tomcat_version }}.tar.gz"
+wkl_prefix: "{{ workload_name.split('-')[0] }}"
+artifactory_reader_user: "art-{{ wkl_prefix }}-read-generic-local-default"
+artifactory_reader_token_path: "artifactory/token/{{ artifactory_reader_user }}"
+
+
 - name: Debug Linux configuration - start
   debug:
     msg: "--------------- Linux configuration started ---------------"
@@ -111,13 +69,17 @@ url_password: "{{ lookup('community.hashi_vault.hashi_vault', 'url=' ~ vault_url
     dest: "{{ jfrog_installer }}"
     mode: '0755'
 
+- name: Set vault token
+  set_fact:
+    artifactory_access_token: "{{ lookup('community.hashi_vault.hashi_vault', 'url=' ~ vault_url ~ ' secret=' ~ artifactory_reader_token_path ~ ':access_token') }}"
 
 - name: Fetch OpenJDK Corretto 22 from jfrog
   ansible.builtin.get_url:
     url: "{{ artifactory_url }}/{{ wkl_virt_repo_name }}/{{ corretto_pkg }}"
-    url_username: "{{ artifactory_reader_user }}"
-    url_password: "{{ lookup('community.hashi_vault.hashi_vault','secret=' ~ artifactory_reader_token_path ~ ':access_token','url=' ~ vault_url) }}"
+    headers:
+      Authorization: "Bearer {{ artifactory_access_token }}"
     dest: "/tmp/{{ corretto_pkg }}"
+    validate_certs: true
 
 
 - name: Install OpenJDK Corretto 22
@@ -130,9 +92,10 @@ url_password: "{{ lookup('community.hashi_vault.hashi_vault', 'url=' ~ vault_url
 - name: Fetch the Apache Tomcat installer
   ansible.builtin.get_url:
     url: "{{ artifactory_url }}/{{ wkl_virt_repo_name }}/apache-tomcat-{{ tomcat_version }}.tar.gz"
-    url_username: "{{ artifactory_reader_user }}"
-    url_password: "{{ lookup('community.hashi_vault.hashi_vault','secret=' ~ artifactory_reader_token_path ~ ':access_token','url=' ~ vault_url) }}"
+    headers:
+      Authorization: "Bearer {{ artifactory_access_token }}"
     dest: "{{ tomcat_archive }}"
+    validate_certs: true
   become: true
 
 - name: Unzip Tomcat 10
@@ -165,9 +128,10 @@ url_password: "{{ lookup('community.hashi_vault.hashi_vault', 'url=' ~ vault_url
 - name: Install LPFat application fonts
   ansible.builtin.get_url:
     url: "{{ artifactory_url }}/{{ wkl_virt_repo_name }}/LPFat/lpfat_fonts.zip"
-    url_username: "{{ artifactory_reader_user }}"
-    url_password: "{{ lookup('community.hashi_vault.hashi_vault','secret=' ~ artifactory_reader_token_path ~ ':access_token', 'url=' ~ vault_url) }}"
+    headers:
+      Authorization: "Bearer {{ artifactory_access_token }}"
     dest: "/tmp/lpfat_fonts.zip"
+    validate_certs: true
 
 - name: Create folder for the application fonts
   file:
@@ -239,9 +203,10 @@ url_password: "{{ lookup('community.hashi_vault.hashi_vault', 'url=' ~ vault_url
     group: tomcat
 
 - name: Start tomcat
-  ansible.builtin.service:
-    name: tomcat
-    state: started
+  shell: | 
+    /opt/tomcat10/bin/startup.sh
+  become: true
+  become_user: tomcat
 
 - name: Create a shell script from the user-data.txt file
   shell: |
