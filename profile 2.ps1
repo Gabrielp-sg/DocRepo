@@ -1,91 +1,199 @@
-# Alias configuration
-Set-Alias -Name k -Value "C:\Program Files\Docker\Docker\resources\bin\kubectl.exe"
-# $vaultExe = "C:\Program Files\HashiCorp\Vault\vault.ext"
-# Custom environment configuration
-$env:AWS_DEFAULT_REGION = 'sa-east-1'
-$proxy='http://LPGPZENPROXY.EMEA.LEASEPLANCORP.NET:80'
-$ENV:HTTP_PROXY=$proxy
-$ENV:HTTPS_PROXY=$proxy
-$ENV:NO_PROXY='localhost,127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,core-services.leaseplan.systems'
-
-# Set options for PSReadLine using Fzf, if Fzf is installed and configured
-if (Get-Module -ListAvailable -Name PSFzf) {
-    Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory 'Ctrl+r'
+{
+  "reason": "couldn't resolve module/action 'community.general.timezone'. This often indicates a misspelling, missing collection, or incorrect module path.\n\nThe error appears to be in '/runner/project/tasks/install_lpfat_tools.yml': line 17, column 3, but may\nbe elsewhere in the file depending on the exact syntax problem.\n\nThe offending line appears to be:\n\n\n- name: Change instance timezone\n  ^ here\n"
 }
+fatal: [ec2-0072-a-sae1-lpfat-lp]: FAILED! => {"reason": "couldn't resolve module/action 'community.general.timezone'. This often indicates a misspelling, missing collection, or incorrect module path.\n\nThe error appears to be in '/runner/project/tasks/install_lpfat_tools.yml': line 17, column 3, but may\nbe elsewhere in the file depending on the exact syntax problem.\n\nThe offending line appears to be:\n\n\n- name: Change instance timezone\n  ^ here\n"}
 
-# Function to log into Vault using the Okta authentication method
-function vl { 
-    $username = "gabriel.guimaraes-ext@leaseplan.com"
-    vault login --method=okta username=$username
-}
 
-# Function to open a Git Bash shell
-function Open-GitBash { 
-    & 'C:\Program Files\Git\bin\sh.exe' --login 
-}
+- name: Debug Linux configuration - start
+  debug:
+    msg: "--------------- Linux configuration started ---------------"
 
-# Function to read AWS credentials from Vault and update AWS configuration
-function aws-vault-read {
-    param(
-        [Parameter(Mandatory)]
-        [string]$workload,
-        [string]$profileName = "default"  # Default profile name set to 'default'
-    )
-    Write-Output "Reading AWS credentials for workload: $workload"
+- name: Upgrade all packages
+  ansible.builtin.package:
+    name: "*"
+    state: latest
 
-    # Fetch AWS credentials from Vault
-    $awsCredentials = vault read "aws/$workload/creds/infra-userland" -format=json | ConvertFrom-Json
-    Write-Output "AWS Credentials fetched: Access Key = $($awsCredentials.data.access_key)"
+- name: Install sshpass
+  ansible.builtin.package:
+    name: 
+      - sshpass
+      - fontconfig
+    state: present
 
-    # Update AWS CLI configuration with fetched credentials
-    aws configure set profile.$profileName.aws_access_key_id $awsCredentials.data.access_key
-    aws configure set profile.$profileName.aws_secret_access_key $awsCredentials.data.secret_key
-    aws configure set profile.$profileName.region 'eu-west-1'  # Set default region
+- name: Change instance timezone
+  community.general.timezone:
+    name: America/Sao_Paulo
+    hwclock: local
+  become: true
 
-    # Optionally, set this profile as default if required
-    aws configure set default.aws_access_key_id $awsCredentials.data.access_key
-    aws configure set default.aws_secret_access_key $awsCredentials.data.secret_key
-    aws configure set default.region 'eu-west-1'
+- name: This command will install jfrog cli
+  ansible.builtin.get_url:
+    url: https://install-cli.jfrog.io
+    dest: "{{ jfrog_installer }}"
+    mode: '0755'
 
-    # Display the updated configuration for verification
-    aws configure list --profile $profileName
 
-    # Setting AWS credentials in the current PowerShell session
-    $env:AWS_ACCESS_KEY_ID = $awsCredentials.data.access_key
-    $env:AWS_SECRET_ACCESS_KEY = $awsCredentials.data.secret_key
-    $env:AWS_DEFAULT_REGION = 'eu-west-1'
+- name: Fetch OpenJDK Corretto 22 from jfrog
+  get_url:
+    url: "{{ artifactory_url }}/{{ wkl_virt_repo_name }}/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm"
+    url_username: "art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default"
+    url_password: "{{ lookup('hashi_vault', 'secret=artifactory/token/art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default:access_token url={{ vault_url }}') }}"
+    dest: "{{ corretto_pkg }}"
 
-    if ($awsCredentials.data.PSObject.Properties.Name -contains 'security_token') {
-        $env:AWS_SESSION_TOKEN = $awsCredentials.data.security_token
-    }
 
-    Write-Host "AWS Credentials updated for session: Access Key = $($awsCredentials.data.access_key)"
-}
+- name: Install OpenJDK Corretto 22
+  ansible.builtin.yum:
+    name: "{{ corretto_pkg }}"
+    state: present
+    disable_gpg_check: true
+  become: true
 
-# Function to interactively select a workload and read credentials
-function usercred() { 
-    # List vault secrets and use Fzf to select one interactively
-    $workload = vault secrets list -format table | Select-String '[A-Z]{3,3}/\d{4}-[A-Z]{3,3}-[dtapm]/' | Invoke-Fzf 
-    $workload_env = ($workload.split(" ")[0]).split("/")[1]
+- name: Fetch the Apache Tomcat installer
+  get_url:
+    url: "{{ artifactory_url }}/{{ wkl_virt_repo_name }}/apache-tomcat-10.1.30.tar.gz"
+    url_username: "art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default"
+    url_password: "{{ lookup('hashi_vault', 'secret=artifactory/token/art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default:access_token url={{ vault_url }}') }}"
+    dest: /opt/apache-tomcat-10.1.30.tar.gz
+  become: true
 
-    # Read and set AWS credentials for the selected workload
-    aws-vault-read $workload_env 
-    #lzt creds aws --role infra-userland --vault-addr https://vault.core-services.leaseplan.systems -S
-} 
+- name: Unzip Tomcat 10
+  unarchive:
+    src: /opt/apache-tomcat-10.1.30.tar.gz
+    dest: /opt
+    remote_src: yes
+  become: true
 
-# Setting PowerShell execution policy for the current user if not already set
-if ((Get-ExecutionPolicy -Scope CurrentUser) -ne 'RemoteSigned') {
-    Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -force
-    Set-ExecutionPolicy RemoteSigned -Scope LocalMachine -force
-    Set-ExecutionPolicy RemoteSigned -Scope Process -force
-}
+- name: Rename Tomcat folder
+  shell: | 
+   [ -d /opt/tomcat10 ] || mv /opt/apache-tomcat-10.1.30 /opt/tomcat10
+  become: true
 
-# Ensure the Vault address is set for the session
-$env:VAULT_ADDR = 'https://vault.core-services.leaseplan.systems'
-Write-Host "Vault Address is set to: $env:VAULT_ADDR"
+- name: Create Tomcat user
+  ansible.builtin.user:
+    name: tomcat
+    shell: /sbin/nologin
+    create_home: false
+    state: present
 
-# Automatically update credentials on session start
-$initialWorkload = Read-Host "Please enter the initial workload (e.g., 9998-wkl-d)"
-aws-vault-read -workload $initialWorkload
+- name: Copy tomcat users file
+  copy:
+    src: ./files/tomcat-users.xml.j2
+    dest: /opt/tomcat10/conf/tomcat-users.xml
+    mode: 0755
+    force: false
+  become: true
 
-Import-Module posh-git
+- name: Install LPFat application fonts
+  get_url:
+    url: "{{ artifactory_url }}/{{ wkl_virt_repo_name }}/LPFat/lpfat_fonts.zip"
+    url_username: "art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default"
+    url_password: "{{ lookup('hashi_vault', 'secret=artifactory/token/art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default:access_token url={{ vault_url }}') }}"
+    dest: /tmp/lpfat_fonts.zip
+
+- name: Create folder for the application fonts
+  file:
+    path: /opt/tomcat10/fonts/
+    state: directory
+  become: true
+
+- name: Unzip fonts file
+  unarchive:
+    src: /tmp/lpfat_fonts.zip
+    dest: /opt/tomcat10/fonts/
+    remote_src: yes
+  become: true
+
+- name: Create symbolic links for the tomcat scripts
+  shell: | 
+    [ -L /bin/tomcatup ] || ln -s /opt/tomcat10/bin/startup.sh /bin/tomcatup ; [ -L /bin/tomcatdown ] || ln -s /opt/tomcat10/bin/shutdown.sh /bin/tomcatdown
+  args:
+    chdir: /opt/tomcat10
+  become: true    
+
+- name: Stop tomcat
+  shell: | 
+    tomcatdown
+  become: true
+  become_user: tomcat
+  ignore_errors: true
+  
+- name: Cleanup the tomcat and the temp folders
+  shell: |
+    rm -rf /opt/tomcat10/webapps/*.war /opt/tomcat10/webapps/LpFat_* /tmp/*.war
+  become: true
+
+
+- name: Download war files from the vendor SFTP server
+  shell: |
+    url=$(aws secretsmanager get-secret-value --region sa-east-1 --secret-id {{ secret_id }} | jq -r '.SecretString' | jq -r '.url' )
+    port=$(aws secretsmanager get-secret-value --region sa-east-1 --secret-id {{ secret_id }} | jq -r '.SecretString' | jq -r '.port' )
+    username=$(aws secretsmanager get-secret-value --region sa-east-1 --secret-id {{ secret_id }} | jq -r '.SecretString' | jq -r '.username' )
+    password=$(aws secretsmanager get-secret-value --region sa-east-1 --secret-id {{ secret_id }} | jq -r '.SecretString' | jq -r '.password' )
+    SSHPASS=${password} sshpass -e sftp -o StrictHostKeyChecking=accept-new -P ${port} ${username}@${url} << ENDSFTP
+    cd releases/{{ env_dir }}/
+    get *.war
+    quit
+    ENDSFTP
+  args:
+    chdir: /tmp/
+  failed_when: false  
+
+- name: Copy downloaded war files to the tomcat folder, if the files are new
+  shell: |
+    cp -u /tmp/*.war /opt/tomcat10/webapps/
+  become: true
+  failed_when: false
+
+- name: Set LpFat S3 environment variables
+  lineinfile:
+    path: "/etc/environment"
+    state: present
+    line: "STORAGE_AWSS3_USE_IAM=true"
+  become: true
+
+- name: Change tomcat folder ownership
+  file:
+    path: /opt/tomcat10
+    state: directory
+    recurse: yes
+    owner: tomcat
+    group: tomcat
+
+- name: Start tomcat
+  shell: | 
+    /opt/tomcat10/bin/startup.sh
+  become: true
+  become_user: tomcat
+
+- name: Create a shell script from the user-data.txt file
+  shell: |
+    cp /var/lib/cloud/instance/user-data.txt /tmp/user-data.sh && chmod +x /tmp/user-data.sh
+  become: true
+
+#- name: Create cron job for the AWX rerun
+#  cron:
+#    name: "Run the user-data script every hour"
+#    weekday: "*"
+#    minute: "30"
+#    hour: "*"
+#    job: "/tmp/user-data.sh > /dev/null"
+#    state: present
+#  become: true
+
+- name: Copy LPFat scheduler script
+  copy:
+    src: ./files/lpfat_scheduler.sh
+    dest: /tmp/lpfat_scheduler.sh
+    mode: 0755
+    force: false
+  become: true
+
+#- name: Create cron job for the LPFat application scheduler
+#  cron:
+#    name: "Run the LPFat scheduler script every minute"
+#    weekday: "*"
+#    minute: "1"
+#    hour: "*"
+#    job: "/tmp/lpfat_scheduler.sh > /tmp/lpfat_scheduler.log"
+#    state: present
+#  become: true
