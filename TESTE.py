@@ -1,3 +1,8 @@
+url_password: "{{ lookup('community.hashi_vault.hashi_vault', 'url=' ~ vault_url ~ ' secret=' ~ artifactory_reader_token_path ~ ' key=access_token') }}"
+url_password: "{{ lookup('community.hashi_vault.hashi_vault', 'url=' ~ vault_url ~ ' secret=' ~ artifactory_reader_token_path ~ ' key=access_token') }}"
+url_password: "{{ lookup('community.hashi_vault.hashi_vault', 'url=' ~ vault_url ~ ' secret=' ~ artifactory_reader_token_path ~ ' key=access_token') }}"
+
+
 {
   "msg": "An unhandled exception occurred while running the lookup plugin 'community.hashi_vault.hashi_vault'. Error was a <class 'ansible.errors.AnsibleError'>, original message: No setting was provided for required configuration plugin_type: lookup plugin: ansible_collections.community.hashi_vault.plugins.lookup.hashi_vault setting: secret . No setting was provided for required configuration plugin_type: lookup plugin: ansible_collections.community.hashi_vault.plugins.lookup.hashi_vault setting: secret ",
   "_ansible_no_log": false
