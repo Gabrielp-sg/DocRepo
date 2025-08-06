@@ -1,0 +1,264 @@
+---
+# Playbook: Linux + Corretto + Tomcat + deploy WARs (com melhorias 1–7)
+
+- hosts: all
+  become: true
+  vars:
+    # (3) Variáveis centralizadas
+    tomcat_version: "10.1.30"
+    tomcat_dir: "/opt/tomcat10"
+    corretto_pkg: "java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm"
+
+    # Ajuste conforme seu naming
+    art_username_prefix: "art"
+    art_generic_role: "read-generic-local-default"
+
+    # Caminhos auxiliares
+    jfrog_installer: "/var/tmp/install-jfrog-cli.sh"
+    tomcat_archive: "/opt/apache-tomcat-{{ tomcat_version }}.tar.gz"
+    corretto_local_path: "/tmp/{{ corretto_pkg }}"
+
+  pre_tasks:
+    - name: Debug Linux configuration - start
+      ansible.builtin.debug:
+        msg: "--------------- Linux configuration started ---------------"
+
+  tasks:
+    # (2) Use 'package' em vez de 'yum' quando possível
+    - name: Atualizar todos os pacotes
+      ansible.builtin.package:
+        name: "*"
+        state: latest
+
+    - name: Instalar dependências
+      ansible.builtin.package:
+        name:
+          - sshpass
+          - fontconfig
+        state: present
+
+    # (1) Idempotência + módulo nativo p/ timezone
+    - name: Definir timezone
+      community.general.timezone:
+        name: America/Sao_Paulo
+
+    # (1) JFrog CLI com get_url + command (idempotente)
+    - name: Baixar instalador do JFrog CLI
+      ansible.builtin.get_url:
+        url: https://install-cli.jfrog.io
+        dest: "{{ jfrog_installer }}"
+        mode: '0755'
+
+    - name: Instalar JFrog CLI (executa uma vez)
+      ansible.builtin.command: "{{ jfrog_installer }}"
+      args:
+        creates: /usr/local/bin/jf
+
+    # Corretto 22
+    - name: Baixar Corretto 22 do Artifactory
+      ansible.builtin.get_url:
+        url: "{{ artifactory_url }}/{{ wkl_virt_repo_name }}/{{ corretto_pkg }}"
+        url_username: "{{ art_username_prefix }}-{{ workload_name.split('-')[0] }}-{{ art_generic_role }}"
+        url_password: "{{ lookup('hashi_vault', 'secret=artifactory/token/art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default:access_token url={{ vault_url }}') }}"
+        dest: "{{ corretto_local_path }}"
+        # checksum: "sha256:<opcional>"
+      register: get_corretto
+
+    - name: Instalar Corretto 22 (local rpm)
+      ansible.builtin.yum:
+        name: "{{ corretto_local_path }}"
+        state: present
+        disable_gpg_check: true
+
+    # Tomcat 10
+    - name: Baixar Apache Tomcat {{ tomcat_version }}
+      ansible.builtin.get_url:
+        url: "{{ artifactory_url }}/{{ wkl_virt_repo_name }}/apache-tomcat-{{ tomcat_version }}.tar.gz"
+        url_username: "{{ art_username_prefix }}-{{ workload_name.split('-')[0] }}-{{ art_generic_role }}"
+        url_password: "{{ lookup('hashi_vault', 'secret=artifactory/token/art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default:access_token url={{ vault_url }}') }}"
+        dest: "{{ tomcat_archive }}"
+        # checksum: "sha256:<opcional>"
+
+    # (6) unarchive com creates
+    - name: Descompactar Tomcat (idempotente)
+      ansible.builtin.unarchive:
+        src: "{{ tomcat_archive }}"
+        dest: /opt
+        remote_src: true
+        creates: "/opt/apache-tomcat-{{ tomcat_version }}/bin/catalina.sh"
+
+    # (6) Renomear diretório Tomcat (idempotente)
+    - name: Renomear diretório Tomcat para caminho fixo
+      ansible.builtin.command: >
+        mv /opt/apache-tomcat-{{ tomcat_version }} {{ tomcat_dir }}
+      args:
+        creates: "{{ tomcat_dir }}/bin/catalina.sh"
+
+    # Usuário do Tomcat
+    - name: Criar usuário tomcat (sem shell de login)
+      ansible.builtin.user:
+        name: tomcat
+        shell: /sbin/nologin
+        create_home: false
+        state: present
+
+    # (4) Template do tomcat-users.xml com handler p/ restart
+    - name: Publicar tomcat-users.xml via template
+      ansible.builtin.template:
+        src: ./files/tomcat-users.xml.j2
+        dest: "{{ tomcat_dir }}/conf/tomcat-users.xml"
+        mode: '0644'
+      notify: Restart Tomcat
+
+    # Fonts da app
+    - name: Baixar fontes LPFat
+      ansible.builtin.get_url:
+        url: "{{ artifactory_url }}/{{ wkl_virt_repo_name }}/LPFat/lpfat_fonts.zip"
+        url_username: "{{ art_username_prefix }}-{{ workload_name.split('-')[0] }}-{{ art_generic_role }}"
+        url_password: "{{ lookup('hashi_vault', 'secret=artifactory/token/art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default:access_token url={{ vault_url }}') }}"
+        dest: /tmp/lpfat_fonts.zip
+
+    - name: Criar diretório de fontes
+      ansible.builtin.file:
+        path: "{{ tomcat_dir }}/fonts/"
+        state: directory
+        owner: tomcat
+        group: tomcat
+        mode: '0755'
+
+    - name: Descompactar fontes (idempotente)
+      ansible.builtin.unarchive:
+        src: /tmp/lpfat_fonts.zip
+        dest: "{{ tomcat_dir }}/fonts/"
+        remote_src: true
+        creates: "{{ tomcat_dir }}/fonts/.installed"
+      notify: Restart Tomcat
+
+    - name: Marcar instalação de fontes
+      ansible.builtin.file:
+        path: "{{ tomcat_dir }}/fonts/.installed"
+        state: touch
+        modification_time: preserve
+        access_time: preserve
+
+    # (5) Systemd service para o Tomcat (substitui tomcatup/tomcatdown)
+    - name: Instalar unidade systemd do Tomcat
+      ansible.builtin.template:
+        src: ./templates/tomcat.service.j2
+        dest: /etc/systemd/system/tomcat.service
+        mode: '0644'
+      notify: Reload systemd
+
+    - name: Habilitar e iniciar Tomcat
+      ansible.builtin.service:
+        name: tomcat
+        state: started
+        enabled: true
+
+    # --- Deploy dos WARs ---
+    - name: Parar Tomcat para deploy
+      ansible.builtin.service:
+        name: tomcat
+        state: stopped
+
+    # (6) Limpeza idempotente usando find + file (evita shell rm -rf)
+    - name: Localizar WARs antigos em webapps
+      ansible.builtin.find:
+        paths: "{{ tomcat_dir }}/webapps"
+        patterns: "*.war"
+        file_type: file
+      register: old_webapps_wars
+
+    - name: Remover WARs antigos de webapps
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ old_webapps_wars.files }}"
+
+    - name: Localizar diretórios LpFat_* antigos
+      ansible.builtin.find:
+        paths: "{{ tomcat_dir }}/webapps"
+        patterns: "LpFat_*"
+        file_type: directory
+      register: old_webapps_dirs
+
+    - name: Remover diretórios LpFat_* antigos
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ old_webapps_dirs.files }}"
+
+    - name: Localizar WARs temporários em /tmp
+      ansible.builtin.find:
+        paths: /tmp
+        patterns: "*.war"
+        file_type: file
+      register: tmp_wars
+
+    - name: Remover WARs temporários de /tmp
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ tmp_wars.files }}"
+
+    # (1) Mantive shell para SFTP/AWS (otimização maior é o item 8, fora do escopo pedido)
+    - name: Baixar WARs do vendor (SFTP)
+      ansible.builtin.shell: |
+        url=$(aws secretsmanager get-secret-value --region sa-east-1 --secret-id {{ secret_id }} | jq -r '.SecretString' | jq -r '.url' )
+        port=$(aws secretsmanager get-secret-value --region sa-east-1 --secret-id {{ secret_id }} | jq -r '.SecretString' | jq -r '.port' )
+        username=$(aws secretsmanager get-secret-value --region sa-east-1 --secret-id {{ secret_id }} | jq -r '.SecretString' | jq -r '.username' )
+        password=$(aws secretsmanager get-secret-value --region sa-east-1 --secret-id {{ secret_id }} | jq -r '.SecretString' | jq -r '.password' )
+        SSHPASS=${password} sshpass -e sftp -o StrictHostKeyChecking=accept-new -P ${port} ${username}@${url} << 'ENDSFTP'
+        cd releases/Desenvolvimento/
+        get *.war
+        quit
+        ENDSFTP
+      args:
+        chdir: /tmp
+
+    - name: Copiar WARs para webapps (só arquivos novos/modificados)
+      ansible.builtin.shell: |
+        cp -u /tmp/*.war {{ tomcat_dir }}/webapps/
+
+    # Variáveis de ambiente (mantido conforme original)
+    - name: Definir variável STORAGE_AWSS3_USE_IAM em /etc/environment
+      ansible.builtin.lineinfile:
+        path: "/etc/environment"
+        state: present
+        line: "STORAGE_AWSS3_USE_IAM=true"
+
+    - name: Ajustar propriedade do diretório do Tomcat
+      ansible.builtin.file:
+        path: "{{ tomcat_dir }}"
+        state: directory
+        recurse: true
+        owner: tomcat
+        group: tomcat
+
+    - name: Iniciar Tomcat após deploy
+      ansible.builtin.service:
+        name: tomcat
+        state: started
+
+    - name: Criar script a partir do user-data (idempotente)
+      ansible.builtin.shell: |
+        cp /var/lib/cloud/instance/user-data.txt /tmp/user-data.sh && chmod +x /tmp/user-data.sh
+      args:
+        creates: /tmp/user-data.sh
+
+    - name: Copiar script do scheduler LPFat
+      ansible.builtin.copy:
+        src: ./files/lpfat_scheduler.sh
+        dest: /tmp/lpfat_scheduler.sh
+        mode: '0755'
+        force: false
+
+  handlers:
+    - name: Reload systemd
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: Restart Tomcat
+      ansible.builtin.service:
+        name: tomcat
+        state: restarted
