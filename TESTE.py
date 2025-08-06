@@ -2,12 +2,56 @@ url_password: "{{ lookup('community.hashi_vault.hashi_vault', 'url=' ~ vault_url
 url_password: "{{ lookup('community.hashi_vault.hashi_vault', 'url=' ~ vault_url ~ ' secret=' ~ artifactory_reader_token_path ~ ' key=access_token') }}"
 url_password: "{{ lookup('community.hashi_vault.hashi_vault', 'url=' ~ vault_url ~ ' secret=' ~ artifactory_reader_token_path ~ ' key=access_token') }}"
 
-
 {
-  "msg": "An unhandled exception occurred while running the lookup plugin 'community.hashi_vault.hashi_vault'. Error was a <class 'ansible.errors.AnsibleError'>, original message: No setting was provided for required configuration plugin_type: lookup plugin: ansible_collections.community.hashi_vault.plugins.lookup.hashi_vault setting: secret . No setting was provided for required configuration plugin_type: lookup plugin: ansible_collections.community.hashi_vault.plugins.lookup.hashi_vault setting: secret ",
-  "_ansible_no_log": false
+  "status_code": 401,
+  "response": "HTTP Error 401: ",
+  "url": "https://leaseplan.jfrog.io/artifactory/art-0072-generic-virtual/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm",
+  "dest": "/tmp/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm",
+  "elapsed": 1,
+  "msg": "Request failed",
+  "uid": 0,
+  "gid": 0,
+  "owner": "root",
+  "group": "root",
+  "mode": "0644",
+  "state": "file",
+  "secontext": "system_u:object_r:user_home_t:s0",
+  "size": 207530234,
+  "invocation": {
+    "module_args": {
+      "url": "https://leaseplan.jfrog.io/artifactory/art-0072-generic-virtual/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm",
+      "url_username": "VALUE_SPECIFIED_IN_NO_LOG_PARAMETER",
+      "url_password": "{'access_token': '********', 'expires_in': ********, 'reference_token': '', 'refresh_token': '', 'role': '********', 'scope': 'applied-permissions/groups:********', 'token_id': '********', 'username': '********'}",
+      "dest": "/tmp/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm",
+      "force": false,
+      "http_agent": "ansible-httpget",
+      "use_proxy": true,
+      "validate_certs": true,
+      "force_basic_auth": false,
+      "use_gssapi": false,
+      "backup": false,
+      "sha256sum": "",
+      "checksum": "",
+      "timeout": 10,
+      "unredirected_headers": [],
+      "unsafe_writes": false,
+      "client_cert": null,
+      "client_key": null,
+      "headers": null,
+      "tmp_dest": null,
+      "mode": null,
+      "owner": null,
+      "group": null,
+      "seuser": null,
+      "serole": null,
+      "selevel": null,
+      "setype": null,
+      "attributes": null
+    }
+  },
+  "_ansible_no_log": false,
+  "changed": false
 }
-
 - name: Debug Linux configuration - start
   debug:
     msg: "--------------- Linux configuration started ---------------"
