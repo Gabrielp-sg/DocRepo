@@ -1,31 +1,7 @@
-fatal: [ec2-0072-a-sae1-lpfat-lp]: FAILED! => {"reason": "We were unable to read either as JSON nor YAML, these are the errors we got from each:\nJSON: Expecting value: line 1 column 1 (char 0)\n\nSyntax Error while loading YAML.\n  found unacceptable key (unhashable type: 'AnsibleMapping')\n\nThe error appears to be in '/runner/project/tasks/install_lpfat_tools.yml': line 53, column 11, but may\nbe elsewhere in the file depending on the exact syntax problem.\n\nThe offending line appears to be:\n\n  ansible.builtin.unarchive:\n    src: {{ tomcat_archive }}\n          ^ here\nWe could be wrong, but this one looks like it might be an issue with\nmissing quotes. Always quote template expression brackets when they\nstart a value. For instance:\n\n    with_items:\n      - {{ foo }}\n\nShould be written as:\n\n    with_items:\n      - \"{{ foo }}\"\n"}
 {
-  "reason": "We were unable to read either as JSON nor YAML, these are the errors we got from each:\nJSON: Expecting value: line 1 column 1 (char 0)\n\nSyntax Error while loading YAML.\n  found unacceptable key (unhashable type: 'AnsibleMapping')\n\nThe error appears to be in '/runner/project/tasks/install_lpfat_tools.yml': line 53, column 11, but may\nbe elsewhere in the file depending on the exact syntax problem.\n\nThe offending line appears to be:\n\n  ansible.builtin.unarchive:\n    src: {{ tomcat_archive }}\n          ^ here\nWe could be wrong, but this one looks like it might be an issue with\nmissing quotes. Always quote template expression brackets when they\nstart a value. For instance:\n\n    with_items:\n      - {{ foo }}\n\nShould be written as:\n\n    with_items:\n      - \"{{ foo }}\"\n"
+  "msg": "An unhandled exception occurred while running the lookup plugin 'community.hashi_vault.hashi_vault'. Error was a <class 'ansible.errors.AnsibleError'>, original message: No setting was provided for required configuration plugin_type: lookup plugin: ansible_collections.community.hashi_vault.plugins.lookup.hashi_vault setting: secret . No setting was provided for required configuration plugin_type: lookup plugin: ansible_collections.community.hashi_vault.plugins.lookup.hashi_vault setting: secret ",
+  "_ansible_no_log": false
 }
----
-# this is the defaulf configuration for ansible to work with ssm.
-ansible_user: 'ssm-user'
-ansible_connection: aws_ssm
-ansible_aws_ssm_region: sa-east-1 
-ansible_ssm_retry: 8
-ansible_aws_ssm_timeout: 360
-
-# here some variables that are needed for the domain join and can be used for other purposes.
-aws_region: sa-east-1
-workload_name: 0072-wkl-lpbr-apps
-project_name: lpfat
-artifactory_token: "artifactory/token/art-0072-read-generic-local-default"
-artifactory_url: "https://leaseplan.jfrog.io/artifactory"
-wkl_virt_repo_name: "art-{{ workload_name.split(\"-\")[0] }}-generic-virtual"
-artifactory_bearer_token: "{{ lookup('hashi_vault', 'secret=artifactory/token/art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default:access_token url={{ vault_url }}') }}"
-vault_url: "https://vault.core-services.leaseplan.systems"
-jfrog_installer: "/var/tmp/install-jfrog-cli.sh"
-corretto_pkg: "java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm"
-tomcat_version: "10.1.30"
-tomcat_archive: "/opt/apache-tomcat-{{ tomcat_version }}.tar.gz"
-wkl_prefix: "{{ workload_name.split('-')[0] }}"
-artifactory_reader_user: "art-{{ wkl_prefix }}-read-generic-local-default"
-artifactory_reader_token_path: "artifactory/token/{{ artifactory_reader_user }}"
 
 - name: Debug Linux configuration - start
   debug:
@@ -79,7 +55,7 @@ artifactory_reader_token_path: "artifactory/token/{{ artifactory_reader_user }}"
 
 - name: Unzip Tomcat 10
   ansible.builtin.unarchive:
-    src: {{ tomcat_archive }}
+    src: "{{ tomcat_archive }}"
     dest: /opt
     remote_src: yes
   become: true
