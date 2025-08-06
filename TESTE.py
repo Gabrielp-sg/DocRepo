@@ -1,5 +1,7 @@
 fatal: [ec2-0072-a-sae1-lpfat-lp]: FAILED! => {"reason": "We were unable to read either as JSON nor YAML, these are the errors we got from each:\nJSON: Expecting value: line 1 column 1 (char 0)\n\nSyntax Error while loading YAML.\n  found unacceptable key (unhashable type: 'AnsibleMapping')\n\nThe error appears to be in '/runner/project/tasks/install_lpfat_tools.yml': line 53, column 11, but may\nbe elsewhere in the file depending on the exact syntax problem.\n\nThe offending line appears to be:\n\n  ansible.builtin.unarchive:\n    src: {{ tomcat_archive }}\n          ^ here\nWe could be wrong, but this one looks like it might be an issue with\nmissing quotes. Always quote template expression brackets when they\nstart a value. For instance:\n\n    with_items:\n      - {{ foo }}\n\nShould be written as:\n\n    with_items:\n      - \"{{ foo }}\"\n"}
-
+{
+  "reason": "We were unable to read either as JSON nor YAML, these are the errors we got from each:\nJSON: Expecting value: line 1 column 1 (char 0)\n\nSyntax Error while loading YAML.\n  found unacceptable key (unhashable type: 'AnsibleMapping')\n\nThe error appears to be in '/runner/project/tasks/install_lpfat_tools.yml': line 53, column 11, but may\nbe elsewhere in the file depending on the exact syntax problem.\n\nThe offending line appears to be:\n\n  ansible.builtin.unarchive:\n    src: {{ tomcat_archive }}\n          ^ here\nWe could be wrong, but this one looks like it might be an issue with\nmissing quotes. Always quote template expression brackets when they\nstart a value. For instance:\n\n    with_items:\n      - {{ foo }}\n\nShould be written as:\n\n    with_items:\n      - \"{{ foo }}\"\n"
+}
 ---
 # this is the defaulf configuration for ansible to work with ssm.
 ansible_user: 'ssm-user'
