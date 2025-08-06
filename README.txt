@@ -2,6 +2,9 @@
 True to False. This feature will be removed from community.hashi_vault in 
 version 4.0.0. Deprecation warnings can be disabled by setting 
 deprecation_warnings=False in ansible.cfg.
+[defaults]
+connection_plugins = :~/.ansible/plugins/connection:/home/awx/.ansible/plugins/connection/
+
 
 
 
