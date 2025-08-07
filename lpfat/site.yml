@@ -1,0 +1,17 @@
+---
+# this is an example file, but you probably want to execute this on every machine.
+- hosts: tag_leaseplan_os_type_windows
+  gather_facts: yes
+  tasks:
+    - name: run windows basic configuration
+      import_tasks: "tasks/windows.yml"
+      when: ansible_os_family == "Windows" 
+      # we already target only windows hosts so this is redundant but as an example.
+
+# - hosts: tag_leaseplan_os_type_linux
+#   gather_facts: yes
+#   tasks:
+#   - name: join the domain
+#     include_role:
+#       name: 'domain_join'
+      # here an example on how to use roles, see also roles/requirements.yml
