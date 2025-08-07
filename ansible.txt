@@ -1,3 +1,32 @@
+{
+  "ansible_facts": {},
+  "msg": "The following modules failed to execute: ansible.legacy.setup\n",
+  "failed_modules": {
+    "ansible.legacy.setup": {
+      "failed": true,
+      "module_stdout": "{\"changed\":false,\"invocation\":{\"module_args\":{\"_measure_subset\":false,\"gather_timeout\":10,\"gather_subset\":[\"all\"],\"fact_path\":null}},\"ansible_facts\":{\"ansible_ip_addresses\":[\"10.132.36.9\"],\"ansible_windows_domain_role\":\"Member server\",\"ansible_architecture2\":\"x86_64\",\"ansible_user_gecos\":\"\",\"ansible_distribution_major_version\":\"10\",\"ansible_pagefiletotal_mb\":448,\"ansible_os_name\":\"Microsoft Windows Server 2022 Datacenter\",\"ansible_system_description\":\"\",\"ansible_machine_id\":\"S-1-5-21-3964525826-3094089746-2827919963\",\"ansible_product_serial\":\"ec2dacf5-442f-1bab-45be-906da1f30e7d\",\"ansible_system_vendor\":\"Amazon EC2\",\"gather_subset\":[\"all\"],\"ansible_bios_version\":\"1.0\",\"ansible_user_id\":\"LPLPFATWINA0072$\",\"ansible_date_time\":{\"epoch_local\":\"1754594002.21715\",\"epoch_int\":1754594002,\"date\":\"2025-08-07\",\"second\":\"22\",\"tz\":\"UTC\",\"iso8601_micro\":\"2025-08-07T19:13:22.217145Z\",\"iso8601_basic_short\":\"20250807T191322\",\"minute\":\"13\",\"day\":\"07\",\"weekday\":\"Thursday\",\"iso8601\":\"2025-08-07T19:13:22Z\",\"tz_offset\":\"+00:00\",\"iso8601_basic\":\"20250807T191322217145\",\"epoch\":\"1754594002.21715\",\"weekday_number\":\"4\",\"hour\":\"19\",\"year\":\"2025\",\"month\":\"08\",\"time\":\"19:13:22\",\"weeknumber\":\"31\"},\"ansible_user_dir\":\"C:\\\\Windows\\\\system32\\\\config\\\\systemprofile\",\"ansible_processor_vcpus\":2,\"ansible_user_sid\":\"S-1-5-21-3964525826-3094089746-2827919963-1000\",\"ansible_owner_contact\":\"\",\"ansible_distribution\":\"M\ricrosoft Windows Server 2022 Datacenter\",\"ansible_processor\":[\"0\",\"GenuineIntel\",\"Intel(R) Xeon(R) Platinum 8175M CPU @ 2.50GHz\",\"1\",\"GenuineIntel\",\"Intel(R) Xeon(R) Platinum 8175M CPU @ 2.50GHz\"],\"ansible_powershell_version\":5,\"ansible_uptime_seconds\":1700,\"module_setup\":true,\"ansible_interfaces\":[{\"dns_domain\":null,\"connection_name\":\"Ethernet 3\",\"default_gateway\":\"10.132.36.1\",\"mtu\":1500,\"interface_name\":\"Amazon Elastic Network Adapter\",\"ipv6\":{},\"macaddress\":\"02:59:E6:8E:2B:D5\",\"speed\":4999.999,\"interface_index\":8,\"ipv4\":{\"address\":\"10.132.36.9\",\"prefix\":\"23\"}}],\"ansible_distribution_version\":\"10.0.20348.0\",\"ansible_windows_domain_member\":true,\"ansible_swaptotal_mb\":0,\"ansible_hostname\":\"LPLPFATWINA0072\",\"ansible_virtualization_role\":\"guest\",\"ansible_memfree_mb\":412,\"ansible_processor_count\":1,\"ansible_os_product_type\":\"server\",\"ansible_netbios_name\":\"LPLPFATWINA0072\",\"ansible_product_name\":\"t3.small\",\"ansible_virtualization_type\":\"kvm\",\"ansible_os_installation_type\":\"Server\",\"ansible_lastboot\":\"2025-08-07 18:45:03Z\",\"ansible_architecture\":\"64-bit\",\"ansible_bios_date\":\"10/16/2017\",\"ansible_processor_cores\":1,\"ansible_fqdn\":\"LPLPFATWINA0072.leaseplancorp.net\",\"ansible_domain\":\"leaseplancorp.net\",\"ansible_memtotal_mb\":2010,\"ansible_kernel\":\"10.0.20348.0\",\"ansible_pagefilefree_mb\":374,\"ansible_nodename\":\"LPLPFATWINA0072.leaseplancorp.net\",\"ansible_os_family\":\"Windows\",\"ansible_processor_threads_per_core\":2,\"ansible_owner_name\":\"EC2\",\"ansible_env\":{\"PROCESSOR_IDENTIFIER\":\"Intel64 Family 6 Model 85 Stepping 4, GenuineIntel\",\"ComSpec\":\"C:\\\\Windows\\\\system32\\\\cmd.exe\",\"DriverData\":\"C:\\\\Windows\\\\System32\\\\Drivers\\\\DriverData\",\"LOCALAPPDATA\":\"C:\\\\Windows\\\\system32\\\\config\\\\systemprofile\\\\AppData\\\\Local\",\"Path\":\"C:\\\\Windows\\\\system32;C:\\\\Windows;C:\\\\Windows\\\\System32\\\\Wbem;C:\\\\Windows\\\\System32\\\\WindowsPowerShell\\\\v1.0\\\\;C:\\\\Windows\\\\System32\\\\OpenSSH\\\\;C:\\\\Program Files\\\\Amazon\\\\cfn-bootstrap\\\\;C:\\\\Program Files\\\\Amazon\\\\AWSCLIV2\\\\;C:\\\\Windows\\\\system32\\\\config\\\\systemprofile\\\\AppData\\\\Local\\\\Microsoft\\\\WindowsApps\",\"SystemRoot\":\"C:\\\\Windows\",\"ALLUSERSPROFILE\":\"C:\\\\ProgramData\",\"CommonProgramFiles(x86)\":\"C:\\\\Program Files (x86)\\\\Common Files\",\"ProgramW6432\":\"C:\\\\Program Files\",\"USERPROFILE\":\"C:\\\\Windows\\\\system32\\\\config\\\\systemprofile\",\"ProgramFiles(x86)\":\"C:\\\\Program Files (x86)\",\"PSModulePath\":\"C:\\\\Windows\\\\system32\\\\WindowsPowerShell\\\\v1.0\\\\Modules;C:\\\\Program Files\\\\WindowsPowerShell\\\\Modules\",\"PSExecutionPolicyPreference\":\"Unrestricted\",\"USERDOMAIN\":\"LEASEPLANCORP\",\"SystemDrive\":\"C:\",\"EC2LAUNCH_TELEMETRY\":\"1\",\"OS\":\"Windows_NT\",\"CommonProgramFiles\":\"C:\\\\Program Files\\\\Common Files\",\"ProgramFiles\":\"C:\\\\Program Files\",\"USERNAME\":\"LPLPFATWINA0072$\",\"PROCESSOR_LEVEL\":\"6\",\"COMPUTERNAME\":\"LPLPFATWINA0072\",\"AWS_EXECUTION_ENV\":\"EC2\",\"NUMBER_OF_PROCESSORS\":\"2\",\"PUBLIC\":\"C:\\\\Users\\\\Public\",\"PROCESSOR_REVISION\":\"5504\",\"APPDATA\":\"C:\\\\Windows\\\\system32\\\\config\\\\systemprofile\\\\AppData\\\\Roaming\",\"ProgramData\":\"C:\\\\ProgramData\",\"PROCESSOR_ARCHITECTURE\":\"AMD64\",\"CommonProgramW6432\":\"C:\\\\Program Files\\\\Common Files\",\"windir\":\"C:\\\\Windows\",\"PATHEXT\":\".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC;.CPL\",\"TEMP\":\"C:\\\\Windows\\\\TEMP\",\"TMP\":\"C:\\\\Windows\\\\TEMP\"},\"ansible_windows_domain\":\"leaseplancorp.net\",\"ansible_reboot_pending\":false,\"ansible_system\":\"Win32NT\"}}",
+      "module_stderr": "",
+      "msg": "MODULE FAILURE\nSee stdout/stderr for the exact error",
+      "rc": 0
+    }
+  },
+  "_ansible_verbose_override": true,
+  "_ansible_no_log": false,
+  "changed": false
+}
+
+---
+# this is an example file, but you probably want to execute this on every machine.
+- hosts: tag_leaseplan_os_type_windows
+  gather_facts: yes
+  tasks:
+    - name: run windows basic configuration
+      import_tasks: "tasks/windows.yml"
+      when: ansible_os_family == "Windows" 
+      # we already target only windows hosts so this is redundant but as an example.
+
+
+
 
 - name: Create SMB shares
   win_share:
