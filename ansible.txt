@@ -1,1 +1,85 @@
 
+- name: Create SMB shares
+  win_share:
+    path: C:\STCPCLT_BRADESCO\O0055BRADESCO\{{ item }}
+    name: "{{ item }}"
+    full: LpFATUser
+  loop:
+    - ENTRADA
+    - SAIDA
+
+- name: Ensure CIFS share mounted
+  mount:
+    src: "//{{ win_ip }}/{{ item }}"
+    path: "/mnt/bradesco/{{ item | lower }}"
+    fstype: cifs
+    opts: "vers=3.1.1,credentials=/etc/samba/cred_lpfat,uid=1000,gid=1000"
+    state: mounted
+  loop:
+    - ENTRADA
+    - SAIDA
+
+
+- name: Create Windows user for SMB authentication
+  win_user:
+    name: LpFATUser
+    password: "{{ lpfat_user_password }}"
+    password_never_expires: yes
+    state: present
+    groups:
+      - Users
+
+- name: Set permissions on directories
+  win_acl:
+    path: C:\STCPCLT_BRADESCO\O0055BRADESCO\{{ item }}
+    user: LpFATUser
+    rights: FullControl
+    type: allow
+    state: present
+  loop:
+    - ENTRADA
+    - SAIDA
+
+
+- name: Install CIFS utilities
+  ansible.builtin.package:
+    name: cifs-utils
+    state: present
+  become: true
+
+- name: Create Samba credentials directory
+  ansible.builtin.file:
+    path: /etc/samba
+    state: directory
+    mode: '0755'
+  become: true
+
+- name: Create CIFS credentials file
+  ansible.builtin.copy:
+    content: |
+      username=LpFATUser
+      password={{ lpfat_user_password }}
+      domain=WORKGROUP
+    dest: /etc/samba/cred_lpfat
+    mode: '0600'
+    owner: root
+    group: root
+  become: true
+
+- name: Create mount points
+  ansible.builtin.file:
+    path: "/mnt/bradesco/{{ item | lower }}"
+    state: directory
+    mode: '0755'
+  become: true
+  loop:
+    - ENTRADA
+    - SAIDA
+
+
+lpfat_user_password: "{{ lookup('community.hashi_vault.hashi_vault', 'url=' ~ vault_url ~ ' secret=lpfat/smb_credentials:password') }}"
+
+
+lpfat_user_password: "SenhaSegura@2024!"
+
+smbclient -L //ec2-0072-a-sae1-lpfatwin-lp -U LpFATUser
