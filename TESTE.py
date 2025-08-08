@@ -1,4 +1,69 @@
 # Fazer login para obter token:
+
+TOKEN="seu_token_aqui"
+AWX_HOST="https://awx.core-services.leaseplan.systems"
+
+# Detalhes completos do template:
+curl -s -H "Authorization: Bearer $TOKEN" \
+     "$AWX_HOST/api/v2/job_templates/4373/" | jq '.'
+
+# Verificar se tem provisioning callback habilitado:
+curl -s -H "Authorization: Bearer $TOKEN" \
+     "$AWX_HOST/api/v2/job_templates/4373/" | jq '{name, host_config_key, allow_callbacks, callback_url}'
+
+
+# Schedules específicos do template:
+curl -s -H "Authorization: Bearer $TOKEN" \
+     "$AWX_HOST/api/v2/job_templates/4373/schedules/" | jq '.results[] | {id, name, enabled, rrule, dtstart, next_run}'
+
+# Todos os schedules ativos:
+curl -s -H "Authorization: Bearer $TOKEN" \
+     "$AWX_HOST/api/v2/schedules/?enabled=true&unified_job_template=4373" | jq '.results[] | {id, name, rrule, next_run}'
+# Últimos 20 jobs do template:
+curl -s -H "Authorization: Bearer $TOKEN" \
+     "$AWX_HOST/api/v2/job_templates/4373/jobs/?page_size=20&order_by=-created" | jq '.results[] | {id, created, created_by, status, launch_type, execution_node}'
+
+# Jobs da última hora:
+curl -s -H "Authorization: Bearer $TOKEN" \
+     "$AWX_HOST/api/v2/jobs/?job_template=4373&created__gte=$(date -u -d '1 hour ago' '+%Y-%m-%dT%H:%M:%SZ')&page_size=50" | jq '.results[] | {id, created, created_by, launch_type}'
+
+# Atividades recentes do template:
+curl -s -H "Authorization: Bearer $TOKEN" \
+     "$AWX_HOST/api/v2/activity_stream/?object1=job_template&object1_pk=4373&page_size=20" | jq '.results[] | {timestamp, operation, actor, changes}'
+
+# Atividades de launch do template:
+curl -s -H "Authorization: Bearer $TOKEN" \
+     "$AWX_HOST/api/v2/activity_stream/?operation__icontains=launch&object1_pk=4373&page_size=20" | jq '.results[] | {timestamp, actor, operation, changes}'
+
+# Verificar configuração de callback:
+curl -s -H "Authorization: Bearer $TOKEN" \
+     "$AWX_HOST/api/v2/job_templates/4373/" | jq '{allow_callbacks, host_config_key, callback_url}'
+
+# Verificar jobs lançados via callback:
+curl -s -H "Authorization: Bearer $TOKEN" \
+     "$AWX_HOST/api/v2/jobs/?job_template=4373&launch_type=callback&page_size=20" | jq '.results[] | {id, created, created_by, launch_type, execution_node}'
+
+# Jobs das últimas 24 horas com horários:
+curl -s -H "Authorization: Bearer $TOKEN" \
+     "$AWX_HOST/api/v2/jobs/?job_template=4373&created__gte=$(date -u -d '24 hours ago' '+%Y-%m-%dT%H:%M:%SZ')&page_size=100" | jq '.results[] | {created: .created, launch_type: .launch_type, created_by: .created_by}' | jq -s 'sort_by(.created)'
+
+# Extrair apenas as horas para ver o padrão:
+curl -s -H "Authorization: Bearer $TOKEN" \
+     "$AWX_HOST/api/v2/jobs/?job_template=4373&created__gte=$(date -u -d '24 hours ago' '+%Y-%m-%dT%H:%M:%SZ')&page_size=100" | jq -r '.results[] | .created' | cut -d'T' -f2 | cut -d':' -f1-2 | sort | uniq -c
+
+# Verificar se tem notifications configuradas:
+curl -s -H "Authorization: Bearer $TOKEN" \
+     "$AWX_HOST/api/v2/job_templates/4373/notification_templates_started/" | jq '.'
+
+curl -s -H "Authorization: Bearer $TOKEN" \
+     "$AWX_HOST/api/v2/job_templates/4373/notification_templates_success/" | jq '.'
+
+
+
+
+
+
+
 curl -X POST "https://awx.core-services.leaseplan.systems/api/v2/tokens/" \
      -H "Content-Type: application/json" \
      -u "[USUARIO]:[SENHA]" \
