@@ -1,199 +1,44 @@
-{
-  "reason": "couldn't resolve module/action 'community.general.timezone'. This often indicates a misspelling, missing collection, or incorrect module path.\n\nThe error appears to be in '/runner/project/tasks/install_lpfat_tools.yml': line 17, column 3, but may\nbe elsewhere in the file depending on the exact syntax problem.\n\nThe offending line appears to be:\n\n\n- name: Change instance timezone\n  ^ here\n"
-}
-fatal: [ec2-0072-a-sae1-lpfat-lp]: FAILED! => {"reason": "couldn't resolve module/action 'community.general.timezone'. This often indicates a misspelling, missing collection, or incorrect module path.\n\nThe error appears to be in '/runner/project/tasks/install_lpfat_tools.yml': line 17, column 3, but may\nbe elsewhere in the file depending on the exact syntax problem.\n\nThe offending line appears to be:\n\n\n- name: Change instance timezone\n  ^ here\n"}
+# Procura qualquer execução por callback
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "$AWX_HOST/api/v2/unified_jobs/?unified_job_template=4373&launch_type=callback&order_by=-created" | jq '.count,.results[0]'
+# Procura execuções por webhook
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "$AWX_HOST/api/v2/unified_jobs/?unified_job_template=4373&launch_type=webhook&order_by=-created" | jq '.count,.results[0]'
+# Troque $JOB_ID por um dos IDs (ex: 1006577)
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "$AWX_HOST/api/v2/jobs/$JOB_ID/activity_stream/?order_by=-timestamp" | jq '.results[] | {timestamp,actor,operation}'
 
 
-- name: Debug Linux configuration - start
-  debug:
-    msg: "--------------- Linux configuration started ---------------"
+# Quem pode executar esse JT (users, teams, applications)
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "$AWX_HOST/api/v2/job_templates/4373/access_list/?role_level=execute&page_size=200" | jq '.results[] | {type,username,name,summary_fields}'
+# Tokens de usuários com acesso
+curl -s -H "Authorization: Bearer $TOKEN" "$AWX_HOST/api/v2/users/?page_size=200" \
+| jq -r '.results[].id' | while read uid; do
+  curl -s -H "Authorization: Bearer $TOKEN" "$AWX_HOST/api/v2/users/$uid/tokens/?page_size=200" \
+  | jq --arg uid "$uid" '.results[] | {user_id:$uid, id, application, scope, created, modified, summary_fields}'
+done
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "$AWX_HOST/api/v2/applications/?organization=101&page_size=200" | jq '.results[] | {id,name,client_id,organization}'
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "$AWX_HOST/api/v2/tokens/?page_size=200" | jq '.results[] | {id,scope,application,created,modified,summary_fields}'
 
-- name: Upgrade all packages
-  ansible.builtin.package:
-    name: "*"
-    state: latest
+# Schedules do projeto
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "$AWX_HOST/api/v2/projects/3869/schedules/" | jq '.results[] | {id,name,enabled,rrule,next_run}'
 
-- name: Install sshpass
-  ansible.builtin.package:
-    name: 
-      - sshpass
-      - fontconfig
-    state: present
-
-- name: Change instance timezone
-  community.general.timezone:
-    name: America/Sao_Paulo
-    hwclock: local
-  become: true
-
-- name: This command will install jfrog cli
-  ansible.builtin.get_url:
-    url: https://install-cli.jfrog.io
-    dest: "{{ jfrog_installer }}"
-    mode: '0755'
+# Inventory sources do inventário e seus schedules
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "$AWX_HOST/api/v2/inventories/2073/inventory_sources/" | jq '.results[] | {id,name,source,update_on_launch}'
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "$AWX_HOST/api/v2/schedules/?inventory_source=<ID_DO_SOURCE>&enabled=true" | jq '.results[] | {id,name,rrule,next_run}'
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "$AWX_HOST/api/v2/unified_jobs/?unified_job_template=4373&launch_type=workflow&order_by=-created" | jq '.count,.results[0]'
 
 
-- name: Fetch OpenJDK Corretto 22 from jfrog
-  get_url:
-    url: "{{ artifactory_url }}/{{ wkl_virt_repo_name }}/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm"
-    url_username: "art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default"
-    url_password: "{{ lookup('hashi_vault', 'secret=artifactory/token/art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default:access_token url={{ vault_url }}') }}"
-    dest: "{{ corretto_pkg }}"
-
-
-- name: Install OpenJDK Corretto 22
-  ansible.builtin.yum:
-    name: "{{ corretto_pkg }}"
-    state: present
-    disable_gpg_check: true
-  become: true
-
-- name: Fetch the Apache Tomcat installer
-  get_url:
-    url: "{{ artifactory_url }}/{{ wkl_virt_repo_name }}/apache-tomcat-10.1.30.tar.gz"
-    url_username: "art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default"
-    url_password: "{{ lookup('hashi_vault', 'secret=artifactory/token/art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default:access_token url={{ vault_url }}') }}"
-    dest: /opt/apache-tomcat-10.1.30.tar.gz
-  become: true
-
-- name: Unzip Tomcat 10
-  unarchive:
-    src: /opt/apache-tomcat-10.1.30.tar.gz
-    dest: /opt
-    remote_src: yes
-  become: true
-
-- name: Rename Tomcat folder
-  shell: | 
-   [ -d /opt/tomcat10 ] || mv /opt/apache-tomcat-10.1.30 /opt/tomcat10
-  become: true
-
-- name: Create Tomcat user
-  ansible.builtin.user:
-    name: tomcat
-    shell: /sbin/nologin
-    create_home: false
-    state: present
-
-- name: Copy tomcat users file
-  copy:
-    src: ./files/tomcat-users.xml.j2
-    dest: /opt/tomcat10/conf/tomcat-users.xml
-    mode: 0755
-    force: false
-  become: true
-
-- name: Install LPFat application fonts
-  get_url:
-    url: "{{ artifactory_url }}/{{ wkl_virt_repo_name }}/LPFat/lpfat_fonts.zip"
-    url_username: "art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default"
-    url_password: "{{ lookup('hashi_vault', 'secret=artifactory/token/art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default:access_token url={{ vault_url }}') }}"
-    dest: /tmp/lpfat_fonts.zip
-
-- name: Create folder for the application fonts
-  file:
-    path: /opt/tomcat10/fonts/
-    state: directory
-  become: true
-
-- name: Unzip fonts file
-  unarchive:
-    src: /tmp/lpfat_fonts.zip
-    dest: /opt/tomcat10/fonts/
-    remote_src: yes
-  become: true
-
-- name: Create symbolic links for the tomcat scripts
-  shell: | 
-    [ -L /bin/tomcatup ] || ln -s /opt/tomcat10/bin/startup.sh /bin/tomcatup ; [ -L /bin/tomcatdown ] || ln -s /opt/tomcat10/bin/shutdown.sh /bin/tomcatdown
-  args:
-    chdir: /opt/tomcat10
-  become: true    
-
-- name: Stop tomcat
-  shell: | 
-    tomcatdown
-  become: true
-  become_user: tomcat
-  ignore_errors: true
-  
-- name: Cleanup the tomcat and the temp folders
-  shell: |
-    rm -rf /opt/tomcat10/webapps/*.war /opt/tomcat10/webapps/LpFat_* /tmp/*.war
-  become: true
-
-
-- name: Download war files from the vendor SFTP server
-  shell: |
-    url=$(aws secretsmanager get-secret-value --region sa-east-1 --secret-id {{ secret_id }} | jq -r '.SecretString' | jq -r '.url' )
-    port=$(aws secretsmanager get-secret-value --region sa-east-1 --secret-id {{ secret_id }} | jq -r '.SecretString' | jq -r '.port' )
-    username=$(aws secretsmanager get-secret-value --region sa-east-1 --secret-id {{ secret_id }} | jq -r '.SecretString' | jq -r '.username' )
-    password=$(aws secretsmanager get-secret-value --region sa-east-1 --secret-id {{ secret_id }} | jq -r '.SecretString' | jq -r '.password' )
-    SSHPASS=${password} sshpass -e sftp -o StrictHostKeyChecking=accept-new -P ${port} ${username}@${url} << ENDSFTP
-    cd releases/{{ env_dir }}/
-    get *.war
-    quit
-    ENDSFTP
-  args:
-    chdir: /tmp/
-  failed_when: false  
-
-- name: Copy downloaded war files to the tomcat folder, if the files are new
-  shell: |
-    cp -u /tmp/*.war /opt/tomcat10/webapps/
-  become: true
-  failed_when: false
-
-- name: Set LpFat S3 environment variables
-  lineinfile:
-    path: "/etc/environment"
-    state: present
-    line: "STORAGE_AWSS3_USE_IAM=true"
-  become: true
-
-- name: Change tomcat folder ownership
-  file:
-    path: /opt/tomcat10
-    state: directory
-    recurse: yes
-    owner: tomcat
-    group: tomcat
-
-- name: Start tomcat
-  shell: | 
-    /opt/tomcat10/bin/startup.sh
-  become: true
-  become_user: tomcat
-
-- name: Create a shell script from the user-data.txt file
-  shell: |
-    cp /var/lib/cloud/instance/user-data.txt /tmp/user-data.sh && chmod +x /tmp/user-data.sh
-  become: true
-
-#- name: Create cron job for the AWX rerun
-#  cron:
-#    name: "Run the user-data script every hour"
-#    weekday: "*"
-#    minute: "30"
-#    hour: "*"
-#    job: "/tmp/user-data.sh > /dev/null"
-#    state: present
-#  become: true
-
-- name: Copy LPFat scheduler script
-  copy:
-    src: ./files/lpfat_scheduler.sh
-    dest: /tmp/lpfat_scheduler.sh
-    mode: 0755
-    force: false
-  become: true
-
-#- name: Create cron job for the LPFat application scheduler
-#  cron:
-#    name: "Run the LPFat scheduler script every minute"
-#    weekday: "*"
-#    minute: "1"
-#    hour: "*"
-#    job: "/tmp/lpfat_scheduler.sh > /tmp/lpfat_scheduler.log"
-#    state: present
-#  become: true
+# Info do endpoint de callback
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "$AWX_HOST/api/v2/job_templates/4373/callback/" | jq '.'
+# Procure jobs do tipo callback
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "$AWX_HOST/api/v2/unified_jobs/?unified_job_template=4373&launch_type=callback&order_by=-created" | jq '.count'
