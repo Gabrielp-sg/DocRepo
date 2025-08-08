@@ -1,3 +1,14 @@
+# Fazer login para obter token:
+curl -X POST "https://awx.core-services.leaseplan.systems/api/v2/tokens/" \
+     -H "Content-Type: application/json" \
+     -u "[USUARIO]:[SENHA]" \
+     -d '{
+       "description": "CLI Investigation Token", 
+       "application": null,
+       "scope": "read"
+     }'
+
+
 {
   "msg": "Could not find the requested service tomcat: host",
   "invocation": {
