@@ -1,3 +1,25 @@
+Import-Module : The specified module 'LpTools' was not loaded because no valid module file was found in any module
+directory.
+At C:\Users\guimg\OneDrive - LeasePlan Information Services\Documents\WindowsPowerShell\profile.ps1:18 char:1
++ Import-Module LpTools -Force
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ResourceUnavailable: (LpTools:String) [Import-Module], FileNotFoundException
+    + FullyQualifiedErrorId : Modules_ModuleNotFound,Microsoft.PowerShell.Commands.ImportModuleCommand
+
+Import-Module : The specified module 'LpTools' was not loaded because no valid module file was found in any module
+directory.
+At C:\Users\guimg\OneDrive - LeasePlan Information
+Services\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1:18 char:1
++ Import-Module LpTools -Force
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ResourceUnavailable: (LpTools:String) [Import-Module], FileNotFoundException
+    + FullyQualifiedErrorId : Modules_ModuleNotFound,Microsoft.PowerShell.Commands.ImportModuleCommand
+
+
+    
+
+
+
 # --- Instalação UMA VEZ para tornar suas funções e env persistentes ---
 
 $ModuleName  = 'LpTools'
@@ -118,3 +140,4 @@ foreach ($t in $targets) {
 Write-Host "OK! Módulo instalado em: $ModuleRoot"
 Write-Host "Profiles escritos em:`n - $($targets -join "`n - ")"
 Write-Host "Abra uma nova janela do PowerShell OU rode: . $PROFILE"
+
