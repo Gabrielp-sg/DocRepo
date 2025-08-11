@@ -42,7 +42,7 @@ Services\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1:18 char:1
 # --- Instalação UMA VEZ para tornar suas funções e env persistentes ---
 
 $ModuleName  = 'LpTools'
-$ModuleRoot  = Join-Path $HOME "Documents\PowerShell\Modules\$ModuleName\1.0.0"
+$ModuleRoot  = Join-Path $HOME "C:\Users\guimg\Documents\WindowsPowerShell\Modules\$ModuleName\1.0.0"
 $null = New-Item -ItemType Directory -Force $ModuleRoot
 
 # Conteúdo do módulo com suas funções e alias
@@ -159,5 +159,6 @@ foreach ($t in $targets) {
 Write-Host "OK! Módulo instalado em: $ModuleRoot"
 Write-Host "Profiles escritos em:`n - $($targets -join "`n - ")"
 Write-Host "Abra uma nova janela do PowerShell OU rode: . $PROFILE"
+
 
 
