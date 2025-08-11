@@ -1,0 +1,5 @@
+---
+# please do not modify the bucket_name, this is needed for the execution of ansible.
+ansible_aws_ssm_bucket_name: ansible-ssm-847447826148
+secret_id: sm-0072-a-lpfat-send-sftp-credentials
+env_dir: Homologacao
