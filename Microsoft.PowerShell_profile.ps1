@@ -1,3 +1,39 @@
+$docs = [Environment]::GetFolderPath('MyDocuments')
+$ps7 = Join-Path $docs 'PowerShell\Modules'
+$win = Join-Path $docs 'WindowsPowerShell\Modules'
+
+# Descobre onde o LpTools já está (se estiver)
+$src = @(
+  Join-Path $ps7 'LpTools'
+  Join-Path $win 'LpTools'
+) | Where-Object { Test-Path $_ } | Select-Object -First 1
+
+if (-not $src) {
+  Write-Warning "LpTools não encontrado. Se precisar, eu recrio o módulo pra você."
+} else {
+  foreach ($dstBase in @($ps7,$win)) {
+    $dst = Join-Path $dstBase 'LpTools'
+    New-Item -ItemType Directory -Force $dst | Out-Null
+    Copy-Item "$src\*" $dst -Recurse -Force
+    # Marca como "Sempre manter neste dispositivo" (OneDrive)
+    attrib +P $dst /S /D 2>$null
+  }
+}
+
+# Garante que ambos os caminhos estão no PSModulePath da sessão
+foreach ($p in @($ps7,$win)) {
+  if (($env:PSModulePath -split ';') -notcontains $p) {
+    $env:PSModulePath = "$env:PSModulePath;$p"
+  }
+}
+
+# Teste
+Import-Module LpTools -Force
+Get-Module LpTools
+
+
+
+
 # 1) Copiar o módulo da pasta do PowerShell 7 para a do Windows PowerShell
 $src = Join-Path $HOME "Documents\PowerShell\Modules\LpTools"
 $dst = Join-Path $HOME "Documents\WindowsPowerShell\Modules\LpTools"
@@ -159,6 +195,7 @@ foreach ($t in $targets) {
 Write-Host "OK! Módulo instalado em: $ModuleRoot"
 Write-Host "Profiles escritos em:`n - $($targets -join "`n - ")"
 Write-Host "Abra uma nova janela do PowerShell OU rode: . $PROFILE"
+
 
 
 
