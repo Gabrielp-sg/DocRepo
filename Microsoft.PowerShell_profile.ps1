@@ -1,91 +1,120 @@
-# Alias configuration
-Set-Alias -Name k -Value "C:\Program Files\Docker\Docker\resources\bin\kubectl.exe"
-# $vaultExe = "C:\Program Files\HashiCorp\Vault\vault.ext"
-# Custom environment configuration
-$env:AWS_DEFAULT_REGION = 'sa-east-1'
-$proxy='http://LPGPZENPROXY.EMEA.LEASEPLANCORP.NET:80'
-$ENV:HTTP_PROXY=$proxy
-$ENV:HTTPS_PROXY=$proxy
-$ENV:NO_PROXY='localhost,127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,core-services.leaseplan.systems'
+# --- Instalação UMA VEZ para tornar suas funções e env persistentes ---
 
-# Set options for PSReadLine using Fzf, if Fzf is installed and configured
-if (Get-Module -ListAvailable -Name PSFzf) {
-    Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory 'Ctrl+r'
+$ModuleName  = 'LpTools'
+$ModuleRoot  = Join-Path $HOME "Documents\PowerShell\Modules\$ModuleName\1.0.0"
+$null = New-Item -ItemType Directory -Force $ModuleRoot
+
+# Conteúdo do módulo com suas funções e alias
+$moduleContent = @'
+# LpTools.psm1 — suas ferramentas
+
+# Alias "k" como função p/ repassar argumentos ao kubectl
+function k { & "C:\Program Files\Docker\Docker\resources\bin\kubectl.exe" @Args }
+
+# Login no Vault (Okta)
+function vl {
+    param([string]$Username = "gabriel.guimaraes-ext@leaseplan.com")
+    vault login --method=okta username=$Username
 }
 
-# Function to log into Vault using the Okta authentication method
-function vl { 
-    $username = "gabriel.guimaraes-ext@leaseplan.com"
-    vault login --method=okta username=$username
-}
+# Abrir Git Bash
+function Open-GitBash { & 'C:\Program Files\Git\bin\sh.exe' --login }
 
-# Function to open a Git Bash shell
-function Open-GitBash { 
-    & 'C:\Program Files\Git\bin\sh.exe' --login 
-}
-
-# Function to read AWS credentials from Vault and update AWS configuration
+# Ler credenciais AWS do Vault e aplicar em CLI + sessão
 function aws-vault-read {
+    [CmdletBinding()]
     param(
-        [Parameter(Mandatory)]
-        [string]$workload,
-        [string]$profileName = "default"  # Default profile name set to 'default'
+        [Parameter(Mandatory)][string]$workload,
+        [string]$profileName = "default",
+        [string]$region = "eu-west-1"
     )
-    Write-Output "Reading AWS credentials for workload: $workload"
 
-    # Fetch AWS credentials from Vault
-    $awsCredentials = vault read "aws/$workload/creds/infra-userland" -format=json | ConvertFrom-Json
-    Write-Output "AWS Credentials fetched: Access Key = $($awsCredentials.data.access_key)"
+    $json = vault read "aws/$workload/creds/infra-userland" -format=json
+    if (-not $json) { throw "Vault retornou vazio." }
+    $awsCredentials = $json | ConvertFrom-Json
 
-    # Update AWS CLI configuration with fetched credentials
     aws configure set profile.$profileName.aws_access_key_id $awsCredentials.data.access_key
     aws configure set profile.$profileName.aws_secret_access_key $awsCredentials.data.secret_key
-    aws configure set profile.$profileName.region 'eu-west-1'  # Set default region
+    aws configure set profile.$profileName.region $region
 
-    # Optionally, set this profile as default if required
     aws configure set default.aws_access_key_id $awsCredentials.data.access_key
     aws configure set default.aws_secret_access_key $awsCredentials.data.secret_key
-    aws configure set default.region 'eu-west-1'
+    aws configure set default.region $region
 
-    # Display the updated configuration for verification
-    aws configure list --profile $profileName
-
-    # Setting AWS credentials in the current PowerShell session
-    $env:AWS_ACCESS_KEY_ID = $awsCredentials.data.access_key
+    $env:AWS_ACCESS_KEY_ID     = $awsCredentials.data.access_key
     $env:AWS_SECRET_ACCESS_KEY = $awsCredentials.data.secret_key
-    $env:AWS_DEFAULT_REGION = 'eu-west-1'
+    $env:AWS_DEFAULT_REGION    = $region
 
     if ($awsCredentials.data.PSObject.Properties.Name -contains 'security_token') {
         $env:AWS_SESSION_TOKEN = $awsCredentials.data.security_token
+    } else {
+        Remove-Item Env:AWS_SESSION_TOKEN -ErrorAction SilentlyContinue
     }
 
-    Write-Host "AWS Credentials updated for session: Access Key = $($awsCredentials.data.access_key)"
+    aws configure list --profile $profileName
 }
 
-# Function to interactively select a workload and read credentials
-function usercred() { 
-    # List vault secrets and use Fzf to select one interactively
-    $workload = vault secrets list -format table | Select-String '[A-Z]{3,3}/\d{4}-[A-Z]{3,3}-[dtapm]/' | Invoke-Fzf 
-    $workload_env = ($workload.split(" ")[0]).split("/")[1]
+# Selecionar workload via fzf (se existir) e ler credenciais
+function usercred {
+    if (Get-Module -ListAvailable -Name PSFzf) {
+        $workload = vault secrets list -format table |
+            Select-String '[A-Z]{3}/\d{4}-[A-Z]{3}-[dtapm]/' |
+            Invoke-Fzf
+        if (-not $workload) { Write-Warning "Nada selecionado."; return }
+        $workload_env = ($workload.split(" ")[0]).split("/")[1]
+        aws-vault-read -workload $workload_env
+    } else {
+        Write-Warning "PSFzf não instalado. Rode: Install-Module PSFzf -Scope CurrentUser"
+    }
+}
+'@
 
-    # Read and set AWS credentials for the selected workload
-    aws-vault-read $workload_env 
-    #lzt creds aws --role infra-userland --vault-addr https://vault.core-services.leaseplan.systems -S
-} 
+Set-Content -Path (Join-Path $ModuleRoot "$ModuleName.psm1") -Value $moduleContent -Encoding UTF8
 
-# Setting PowerShell execution policy for the current user if not already set
-if ((Get-ExecutionPolicy -Scope CurrentUser) -ne 'RemoteSigned') {
-    Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -force
-    Set-ExecutionPolicy RemoteSigned -Scope LocalMachine -force
-    Set-ExecutionPolicy RemoteSigned -Scope Process -force
+# Conteúdo do profile (carrega seu módulo e configura ambiente a cada sessão)
+$proxy   = 'http://LPGPZENPROXY.EMEA.LEASEPLANCORP.NET:80'
+$noProxy = 'localhost,127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,core-services.leaseplan.systems'
+
+$profileContent = @"
+# >>> LeasePlan profile start >>>
+
+# ExecutionPolicy só para CurrentUser (sem admin). Faz nada se já estiver OK.
+try {
+  if ((Get-ExecutionPolicy -Scope CurrentUser) -ne 'RemoteSigned') {
+    Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+  }
+} catch {}
+
+# Ambiente desta sessão
+`$env:VAULT_ADDR = 'https://vault.core-services.leaseplan.systems'
+`$env:HTTP_PROXY = '$proxy'
+`$env:HTTPS_PROXY = '$proxy'
+`$env:NO_PROXY   = '$noProxy'
+`$env:AWS_DEFAULT_REGION = 'eu-west-1'  # mantenha consistente com aws-vault-read
+
+# Carrega suas ferramentas
+Import-Module $ModuleName -Force
+
+# PSFzf (se tiver)
+if (Get-Module -ListAvailable -Name PSFzf) {
+  Import-Module PSFzf -ErrorAction SilentlyContinue
+  Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory 'Ctrl+r'
 }
 
-# Ensure the Vault address is set for the session
-$env:VAULT_ADDR = 'https://vault.core-services.leaseplan.systems'
-Write-Host "Vault Address is set to: $env:VAULT_ADDR"
+# posh-git (se tiver)
+Import-Module posh-git -ErrorAction SilentlyContinue
 
-# Automatically update credentials on session start
-$initialWorkload = Read-Host "Please enter the initial workload (e.g., 9998-wkl-d)"
-aws-vault-read -workload $initialWorkload
+# >>> LeasePlan profile end <<<
+"@
 
-Import-Module posh-git
+# Grava o profile do host atual e o "AllHosts" (cobre PowerShell 7 e Windows PowerShell)
+$targets = @($PROFILE, $PROFILE.CurrentUserAllHosts) | Select-Object -Unique
+foreach ($t in $targets) {
+  $dir = Split-Path $t
+  $null = New-Item -ItemType Directory -Force $dir
+  Set-Content -Path $t -Value $profileContent -Encoding UTF8
+}
+
+Write-Host "OK! Módulo instalado em: $ModuleRoot"
+Write-Host "Profiles escritos em:`n - $($targets -join "`n - ")"
+Write-Host "Abra uma nova janela do PowerShell OU rode: . $PROFILE"
