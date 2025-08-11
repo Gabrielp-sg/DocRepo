@@ -1,3 +1,22 @@
+# 1) Copiar o módulo da pasta do PowerShell 7 para a do Windows PowerShell
+$src = Join-Path $HOME "Documents\PowerShell\Modules\LpTools"
+$dst = Join-Path $HOME "Documents\WindowsPowerShell\Modules\LpTools"
+
+if (Test-Path $src) {
+  New-Item -ItemType Directory -Force $dst | Out-Null
+  Copy-Item -Path "$src\*" -Destination $dst -Recurse -Force
+} else {
+  Write-Warning "LpTools não existe em $src. Se for o caso, me diga que eu te mando o instalador completo de novo."
+}
+
+# 2) Recarregar o profile desta sessão
+. $PROFILE
+
+# 3) Conferir se o módulo agora é visível
+Get-Module -ListAvailable LpTools
+
+
+
 Import-Module : The specified module 'LpTools' was not loaded because no valid module file was found in any module
 directory.
 At C:\Users\guimg\OneDrive - LeasePlan Information Services\Documents\WindowsPowerShell\profile.ps1:18 char:1
@@ -140,4 +159,5 @@ foreach ($t in $targets) {
 Write-Host "OK! Módulo instalado em: $ModuleRoot"
 Write-Host "Profiles escritos em:`n - $($targets -join "`n - ")"
 Write-Host "Abra uma nova janela do PowerShell OU rode: . $PROFILE"
+
 
