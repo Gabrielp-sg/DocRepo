@@ -1,6 +1,0 @@
-workload_name: 0072-wkl-lpbr-apps
-valid:
-#  - production
-#  - test
-  - development
-  - acceptance
