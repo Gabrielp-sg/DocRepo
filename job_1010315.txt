@@ -1,7 +1,96 @@
 │ Error: Cycle: module.aws_launch_template_lpfat.var.instance_security_group (validation), module.ec2_lpfat_windows.output.aws_security_group (expand), module.ec2_lpfat_windows.aws_security_group_rule.ingress_security_group_rules, module.ec2_lpfat_windows.aws_ebs_volume.additional_disks, module.ec2_lpfat_windows.aws_volume_attachment.additional_disks_attachment, module.ec2_lpfat_windows.output.primary_network_interface_id (expand), module.ec2_lpfat_windows.aws_security_group_rule.egress_security_group_rules, module.ec2_lpfat_windows.aws_security_group_rule.default_egress_security_group_rules, module.ec2_lpfat_windows.output.public_ip (expand), module.ec2_lpfat_windows.aws_security_group_rule.default_ingress_security_group_rules, module.ec2_lpfat_windows (close), module.ec2_lpfat_windows.output.instance_state (expand), module.ec2_lpfat_windows.output.arn (expand), module.ec2_lpfat_windows.output.public_dns (expand), module.ec2_lpfat_windows.output.private_ip (expand), module.ec2_lpfat_windows.output.aws_instance (expand), module.ec2_lpfat_windows.output.availability_zone (expand), module.ec2_lpfat_windows.output.capacity_reservation_specification (expand), module.ec2_lpfat_windows.output.password_data (expand), module.ec2_lpfat_windows.output.outpost_arn (expand), module.ec2_lpfat_windows.output.private_dns (expand), module.ec2_lpfat_windows.var.instance_security_group (validation), module.ec2_lpfat_windows.var.instance_security_group (expand), module.ec2_lpfat_windows.aws_security_group.security_group, module.ec2_lpfat_windows.aws_instance.instance, module.ec2_lpfat_windows.output.id (expand), module.aws_launch_template_lpfat.var.instance_security_group (expand), module.aws_launch_template_lpfat.aws_security_group.security_group, module.aws_launch_template_lpfat.output.aws_security_group (expand)
 │ 
 │ 
+resource "aws_security_group_rule" "windows_allow_smb_from_linux" {
+  type                     = "ingress"
+  from_port                = 445
+  to_port                  = 445
+  protocol                 = "tcp"
+  source_security_group_id = module.aws_launch_template_lpfat.aws_security_group.id
+  security_group_id        = module.ec2_lpfat_windows.security_group_id
+  description              = "Allow SMB/CIFS access from Linux ASG instances for Scopus BRADESCO directories"
 
+  depends_on = [
+    module.aws_launch_template_lpfat,
+    module.ec2_lpfat_windows
+  ]
+}
+
+resource "aws_security_group_rule" "windows_allow_netbios_from_linux" {
+  type                     = "ingress"
+  from_port                = 139
+  to_port                  = 139
+  protocol                 = "tcp"
+  source_security_group_id = module.aws_launch_template_lpfat.aws_security_group.id
+  security_group_id        = module.ec2_lpfat_windows.security_group_id
+  description              = "Allow NetBIOS Session Service from Linux ASG instances"
+
+  depends_on = [
+    module.aws_launch_template_lpfat,
+    module.ec2_lpfat_windows
+  ]
+}
+
+resource "aws_security_group_rule" "windows_allow_rpc_from_linux" {
+  type                     = "ingress"
+  from_port                = 135
+  to_port                  = 135
+  protocol                 = "tcp"
+  source_security_group_id = module.aws_launch_template_lpfat.aws_security_group.id
+  security_group_id        = module.ec2_lpfat_windows.security_group_id
+  description              = "Allow RPC Endpoint Mapper from Linux ASG instances"
+
+  depends_on = [
+    module.aws_launch_template_lpfat,
+    module.ec2_lpfat_windows
+  ]
+}
+
+# Regras de egress para Linux conectar ao Windows via SMB
+resource "aws_security_group_rule" "linux_allow_smb_to_windows" {
+  type                     = "egress"
+  from_port                = 445
+  to_port                  = 445
+  protocol                 = "tcp"
+  source_security_group_id = module.ec2_lpfat_windows.security_group_id
+  security_group_id        = module.aws_launch_template_lpfat.aws_security_group.id
+  description              = "Allow SMB/CIFS to Windows instance for Scopus BRADESCO directories"
+
+  depends_on = [
+    module.aws_launch_template_lpfat,
+    module.ec2_lpfat_windows
+  ]
+}
+
+resource "aws_security_group_rule" "linux_allow_netbios_to_windows" {
+  type                     = "egress"
+  from_port                = 139
+  to_port                  = 139
+  protocol                 = "tcp"
+  source_security_group_id = module.ec2_lpfat_windows.security_group_id
+  security_group_id        = module.aws_launch_template_lpfat.aws_security_group.id
+  description              = "Allow NetBIOS Session Service to Windows instance"
+
+  depends_on = [
+    module.aws_launch_template_lpfat,
+    module.ec2_lpfat_windows
+  ]
+}
+
+resource "aws_security_group_rule" "linux_allow_rpc_to_windows" {
+  type                     = "egress"
+  from_port                = 135
+  to_port                  = 135
+  protocol                 = "tcp"
+  source_security_group_id = module.ec2_lpfat_windows.security_group_id
+  security_group_id        = module.aws_launch_template_lpfat.aws_security_group.id
+  description              = "Allow RPC Endpoint Mapper to Windows instance"
+
+  depends_on = [
+    module.aws_launch_template_lpfat,
+    module.ec2_lpfat_windows
+  ]
+}
 
 # ============================================
 # 1. MODIFICAÇÃO NO ARQUIVO ec2.tf
