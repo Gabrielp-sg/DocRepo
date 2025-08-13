@@ -1,0 +1,20 @@
+---
+# this is an example file, but you probably want to execute this on every machine.
+- hosts: tag_leaseplan_os_type_windows
+  gather_facts: no
+  become: false
+  collections:
+    - ansible.windows
+    - amazon.aws
+  pre_tasks:
+    - name: Gather windows facts
+      ansible.windows.setup:
+        gather_facts:
+          - '!all'
+          - 'min'
+      register: winfacts
+      failed_when: false
+      changed_when: false
+  tasks:
+    - name: run windows basic configuration
+      import_tasks: "tasks/windows.yml"
