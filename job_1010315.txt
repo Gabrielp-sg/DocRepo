@@ -1,3 +1,106 @@
+- name: Verificar configuração dos compartilhamentos
+  ansible.windows.win_shell: |
+    Get-SmbShare | Where-Object {$_.Name -in @('ENTRADA','SAIDA')} | Select-Object Name, Path, AccountName
+  register: share_info
+
+- name: Debug - Mostrar informações dos compartilhamentos
+  debug:
+    var: share_info.stdout_lines
+
+- name: Create SMB shares com permissões completas
+  ansible.windows.win_share:
+    path: C:\STCPCLT_BRADESCO\O0055BRADESCO\{{ item }}
+    name: "{{ item }}"
+    full: Everyone  # Temporariamente para teste
+    read: LpFATUser
+    change: LpFATUser
+    deny: []
+  loop: [ "ENTRADA", "SAIDA" ]
+
+- name: Configurar permissões SMB específicas
+  ansible.windows.win_shell: |
+    Grant-SmbShareAccess -Name "{{ item }}" -AccountName "LpFATUser" -AccessRight Full -Force
+  loop: [ "ENTRADA", "SAIDA" ]
+
+- name: Create CIFS credentials file
+  ansible.builtin.copy:
+    content: |
+      username=LpFATUser
+      password={{ lpfat_user_password }}
+      domain=.
+    dest: /etc/samba/cred_lpfat
+    mode: '0600'
+    owner: root
+    group: root
+  become: true
+
+- name: Ensure CIFS share mounted
+  mount:
+    src: "//{{ win_ip }}/{{ item }}"
+    path: "/mnt/bradesco/{{ item | lower }}"
+    fstype: cifs
+    opts: "credentials=/etc/samba/cred_lpfat,uid=1000,gid=1000,file_mode=0777,dir_mode=0777,noperm,sec=ntlmssp"
+    state: mounted
+  loop:
+    - ENTRADA
+    - SAIDA
+
+# ... tasks anteriores ...
+
+- name: Install pacotes necessários para CIFS
+  ansible.builtin.package:
+    name: 
+      - cifs-utils
+      - samba-client  # Para debug com smbclient
+    state: present
+  become: true
+
+- name: Create Samba credentials directory
+  ansible.builtin.file:
+    path: /etc/samba
+    state: directory
+    mode: '0755'
+  become: true
+
+- name: Create CIFS credentials file
+  ansible.builtin.copy:
+    content: |
+      username=LpFATUser
+      password={{ lpfat_user_password }}
+      domain=.
+    dest: /etc/samba/cred_lpfat
+    mode: '0600'
+    owner: root
+    group: root
+  become: true
+
+- name: Create mount points
+  ansible.builtin.file:
+    path: "/mnt/bradesco/{{ item | lower }}"
+    state: directory
+    mode: '0755'
+  become: true
+  loop:
+    - ENTRADA
+    - SAIDA
+
+- name: Descobrir IP privado da máquina Windows
+  set_fact:
+    win_ip: "{{ hostvars[groups['tag_leaseplan_os_type_windows'][0]]['ec2_private_ip_address'] }}"
+  when: groups['tag_leaseplan_os_type_windows'] is defined
+
+- name: Ensure CIFS share mounted
+  mount:
+    src: "//{{ win_ip }}/{{ item }}"
+    path: "/mnt/bradesco/{{ item | lower }}"
+    fstype: cifs
+    opts: "credentials=/etc/samba/cred_lpfat,uid=1000,gid=1000,file_mode=0777,dir_mode=0777,sec=ntlmssp,vers=3.0"
+    state: mounted
+  loop:
+    - ENTRADA
+    - SAIDA
+  become: true
+
 {
   "msg": "Error mounting /mnt/bradesco/entrada: mount error(13): Permission denied\nRefer to the mount.cifs(8) manual page (e.g. man mount.cifs) and kernel log messages (dmesg)\n",
   "invocation": {
