@@ -1,3 +1,185 @@
+# ============================================
+# 1. MODIFICAÇÃO NO ARQUIVO ec2.tf
+# ============================================
+# Substitua o bloco instance_security_group do módulo ec2_lpfat_windows por este:
+
+module "ec2_lpfat_windows" {
+  source = "git@gitlab.core-services.leaseplan.systems:shared/terraform_modules/aws/aws-instance.git?ref=v5.0.0"
+
+  name                           = format("ec2-%s-%s-sae1-lpfatwin-lp", local.workload_number, local.environment_identifier)
+  ami                            = module.shared_data.ami_id.windows.2022.id
+  subnet_id                      = module.shared_data.vpc.private_subnets_map["a"].id
+  instance_type                  = "t3.small"
+  enable_ffm_base_security_group = false
+  user_data                      = module.awx_win_provision.user_data
+
+  tags = local.tags_ec2_win
+
+  root_block_device = {
+    delete_on_termination = true
+    encrypted             = true
+    volume_size           = 100
+    volume_type           = "gp3"
+  }
+
+  iam_role = {
+    name = local.iam_role_name
+    policy_arns = [
+      aws_iam_policy.policy_lpfat_access_s3.arn,
+      "arn:aws:iam::${local.account_id}:policy/plt-instance-profile-policy",
+      aws_iam_policy.awx_secrets_read.arn
+    ]
+  }
+
+  instance_security_group = {
+    name = local.ec2_sg_name
+    ingress_rules = [
+      {
+        from_port   = 80
+        to_port     = 80
+        protocol    = "tcp"
+        cidr_blocks = ["10.0.0.0/8"]
+        description = "Allow access from all LP network."
+      },
+      {
+        from_port   = 3389
+        to_port     = 3389
+        protocol    = "tcp"
+        cidr_blocks = ["10.0.0.0/8"]
+        description = "Allow access to RDP"
+      },
+      {
+        from_port                = 445
+        to_port                  = 445
+        protocol                 = "tcp"
+        source_security_group_id = module.aws_launch_template_lpfat.aws_security_group.id
+        description              = "Allow SMB/CIFS access from Linux ASG instances for Scopus BRADESCO directories"
+      },
+      {
+        from_port                = 139
+        to_port                  = 139
+        protocol                 = "tcp"
+        source_security_group_id = module.aws_launch_template_lpfat.aws_security_group.id
+        description              = "Allow NetBIOS Session Service from Linux ASG instances"
+      },
+      {
+        from_port                = 135
+        to_port                  = 135
+        protocol                 = "tcp"
+        source_security_group_id = module.aws_launch_template_lpfat.aws_security_group.id
+        description              = "Allow RPC Endpoint Mapper from Linux ASG instances"
+      }
+    ]
+    egress_rules = [
+      {
+        from_port   = 0
+        to_port     = 0
+        protocol    = "all"
+        cidr_blocks = ["10.0.0.0/8"]
+        description = "Allow access to all LP network."
+      }
+    ]
+  }
+}
+
+# ============================================
+# 2. MODIFICAÇÃO NO ARQUIVO alb.tf
+# ============================================
+# Adicione esta regra de egress no bloco instance_security_group do módulo aws_launch_template_lpfat:
+
+module "aws_launch_template_lpfat" {
+  source = "git::git@gitlab.core-services.leaseplan.systems:shared/terraform_modules/aws/aws-launch-template.git?ref=v5.0.1"
+
+  name                                 = format("lt-%s-%s-sae1-lpfat-01", local.workload_number, local.environment_identifier)
+  disable_api_termination              = false
+  update_default_version               = true
+  instance_initiated_shutdown_behavior = "terminate"
+  ebs_optimized                        = true
+  instance_type                        = local.instance_type_alb
+  image_id                             = "ami-0263eebdb110c0e1e"
+  user_data                            = module.awx_provision.user_data
+
+  iam_role = {
+    name = format("role-%s-%s-alb-lpfat", local.workload_number, local.environment_identifier)
+    policy_arns = [
+      aws_iam_policy.policy_lpfat_access_s3.arn,
+      "arn:aws:iam::${local.account_id}:policy/plt-instance-profile-policy",
+      aws_iam_policy.awx_secrets_read.arn
+    ]
+  }
+
+  aws_managed_iam_policy_arns = [
+    "arn:aws:iam::aws:policy/AmazonS3FullAccess",
+    "arn:aws:iam::aws:policy/AmazonEC2FullAccess"
+  ]
+
+  metadata_options = {
+    http_endpoint = "enabled"
+    http_tokens   = "required"
+  }
+
+  instance_security_group = {
+    name = format("sgp-%s-%s-asg-lpfat", local.workload_number, local.environment_identifier)
+    ingress_rules = [
+      {
+        from_port                = 8080
+        to_port                  = 8080
+        protocol                 = "tcp"
+        source_security_group_id = module.aws_security_load_balancer.id
+        description              = "Allow inbound HTTP from ALB"
+      }
+    ]
+    egress_rules = [
+      {
+        from_port   = 57222
+        to_port     = 57222
+        protocol    = "tcp"
+        cidr_blocks = ["187.72.125.121/32"]
+        description = "Allow SFTP connection"
+      },
+      {
+        from_port                = 445
+        to_port                  = 445
+        protocol                 = "tcp"
+        source_security_group_id = module.ec2_lpfat_windows.security_group_id
+        description              = "Allow SMB/CIFS to Windows instance for Scopus BRADESCO directories"
+      },
+      {
+        from_port                = 139
+        to_port                  = 139
+        protocol                 = "tcp"
+        source_security_group_id = module.ec2_lpfat_windows.security_group_id
+        description              = "Allow NetBIOS Session Service to Windows instance"
+      },
+      {
+        from_port                = 135
+        to_port                  = 135
+        protocol                 = "tcp"
+        source_security_group_id = module.ec2_lpfat_windows.security_group_id
+        description              = "Allow RPC Endpoint Mapper to Windows instance"
+      }
+    ]
+  }
+
+  # ... resto da configuração permanece igual ...
+}
+
+# ============================================
+# 3. OPCIONAL: Adicionar output para facilitar referências
+# ============================================
+# Crie um arquivo outputs.tf ou adicione ao existente:
+
+output "windows_instance_private_ip" {
+  value       = module.ec2_lpfat_windows.private_ip
+  description = "Private IP of the Windows EC2 instance for SMB mounting"
+}
+
+output "windows_instance_id" {
+  value       = module.ec2_lpfat_windows.id
+  description = "Instance ID of the Windows EC2"
+}
+
+
 resource "aws_security_group_rule" "allow_smb_from_linux" {
   type                     = "ingress"
   from_port                = 445
