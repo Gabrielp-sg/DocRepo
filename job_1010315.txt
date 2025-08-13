@@ -1,180 +1,21 @@
-│ Error: Cycle: module.aws_launch_template_lpfat.var.instance_security_group (validation), module.ec2_lpfat_windows.output.aws_security_group (expand), module.ec2_lpfat_windows.aws_security_group_rule.ingress_security_group_rules, module.ec2_lpfat_windows.aws_ebs_volume.additional_disks, module.ec2_lpfat_windows.aws_volume_attachment.additional_disks_attachment, module.ec2_lpfat_windows.output.primary_network_interface_id (expand), module.ec2_lpfat_windows.aws_security_group_rule.egress_security_group_rules, module.ec2_lpfat_windows.aws_security_group_rule.default_egress_security_group_rules, module.ec2_lpfat_windows.output.public_ip (expand), module.ec2_lpfat_windows.aws_security_group_rule.default_ingress_security_group_rules, module.ec2_lpfat_windows (close), module.ec2_lpfat_windows.output.instance_state (expand), module.ec2_lpfat_windows.output.arn (expand), module.ec2_lpfat_windows.output.public_dns (expand), module.ec2_lpfat_windows.output.private_ip (expand), module.ec2_lpfat_windows.output.aws_instance (expand), module.ec2_lpfat_windows.output.availability_zone (expand), module.ec2_lpfat_windows.output.capacity_reservation_specification (expand), module.ec2_lpfat_windows.output.password_data (expand), module.ec2_lpfat_windows.output.outpost_arn (expand), module.ec2_lpfat_windows.output.private_dns (expand), module.ec2_lpfat_windows.var.instance_security_group (validation), module.ec2_lpfat_windows.var.instance_security_group (expand), module.ec2_lpfat_windows.aws_security_group.security_group, module.ec2_lpfat_windows.aws_instance.instance, module.ec2_lpfat_windows.output.id (expand), module.aws_launch_template_lpfat.var.instance_security_group (expand), module.aws_launch_template_lpfat.aws_security_group.security_group, module.aws_launch_template_lpfat.output.aws_security_group (expand)
+│ Error: Cycle: module.ec2_lpfat_windows.var.instance_security_group (validation), module.ec2_lpfat_windows.var.instance_security_group (expand), module.ec2_lpfat_windows.aws_security_group.security_group, module.ec2_lpfat_windows.output.aws_security_group (expand), module.aws_launch_template_lpfat.var.instance_security_group (expand), module.aws_launch_template_lpfat.var.instance_security_group (validation), module.aws_launch_template_lpfat.aws_security_group.security_group, module.aws_launch_template_lpfat.output.aws_security_group (expand)
 │ 
-│ 
-      {
-        from_port                 = 445
-        to_port                   = 445
-        protocol                  = "tcp"
-        source_security_group_id  = module.aws_launch_template_lpfat.aws_security_group.id
-        description               = "Allow SMB (TCP/445) from LPFAT Linux ASG"
-      },
 
+// Win
+module "awx_win_provision" {
 
-    {
-      from_port                  = 445
-      to_port                    = 445
-      protocol                   = "tcp"
-      destination_security_group_id = module.ec2_lpfat_windows.aws_security_group.id
-      description                = "Allow SMB (TCP/445) to LPFAT Windows"
-    },
+  source = "git@gitlab.core-services.leaseplan.systems:shared/terraform_modules/aws/aws-awx-callback.git?ref=v1.3.0"
 
+  template_id     = "4702"
+  os_type         = "windows"
+  region          = var.aws_region
+  workload_number = local.workload_index
+  environment_id  = local.environment_identifier
 
-
-│ Error: Unsupported attribute
-│ 
-│   on sg_smb.tf line 7, in resource "aws_security_group_rule" "windows_allow_smb_from_linux":
-│    7:   security_group_id        = module.ec2_lpfat_windows.security_group_id
-│     ├────────────────
-│     │ module.ec2_lpfat_windows is a object
-│ 
-│ This object does not have an attribute named "security_group_id".
-╵
-╷
-│ Error: Unsupported attribute
-│ 
-│   on sg_smb.tf line 22, in resource "aws_security_group_rule" "windows_allow_netbios_from_linux":
-│   22:   security_group_id        = module.ec2_lpfat_windows.security_group_id
-│     ├────────────────
-│     │ module.ec2_lpfat_windows is a object
-│ 
-│ This object does not have an attribute named "security_group_id".
-╵
-╷
-│ Error: Unsupported attribute
-│ 
-│   on sg_smb.tf line 37, in resource "aws_security_group_rule" "windows_allow_rpc_from_linux":
-│   37:   security_group_id        = module.ec2_lpfat_windows.security_group_id
-│     ├────────────────
-│     │ module.ec2_lpfat_windows is a object
-│ 
-│ This object does not have an attribute named "security_group_id".
-╵
-╷
-│ Error: Unsupported attribute
-│ 
-│   on sg_smb.tf line 51, in resource "aws_security_group_rule" "linux_allow_smb_to_windows":
-│   51:   source_security_group_id = module.ec2_lpfat_windows.security_group_id
-│     ├────────────────
-│     │ module.ec2_lpfat_windows is a object
-│ 
-│ This object does not have an attribute named "security_group_id".
-╵
-╷
-│ Error: Unsupported attribute
-│ 
-│   on sg_smb.tf line 66, in resource "aws_security_group_rule" "linux_allow_netbios_to_windows":
-│   66:   source_security_group_id = module.ec2_lpfat_windows.security_group_id
-│     ├────────────────
-│     │ module.ec2_lpfat_windows is a object
-│ 
-│ This object does not have an attribute named "security_group_id".
-╵
-╷
-│ Error: Unsupported attribute
-│ 
-│   on sg_smb.tf line 81, in resource "aws_security_group_rule" "linux_allow_rpc_to_windows":
-│   81:   source_security_group_id = module.ec2_lpfat_windows.security_group_id
-│     ├────────────────
-│     │ module.ec2_lpfat_windows is a object
-│ 
-│ This object does not have an attribute named "security_group_id".
-
-
-resource "aws_security_group_rule" "windows_allow_smb_from_linux" {
-  type                     = "ingress"
-  from_port                = 445
-  to_port                  = 445
-  protocol                 = "tcp"
-  source_security_group_id = module.aws_launch_template_lpfat.aws_security_group.id
-  security_group_id        = module.ec2_lpfat_windows.security_group_id
-  description              = "Allow SMB/CIFS access from Linux ASG instances for Scopus BRADESCO directories"
-
-  depends_on = [
-    module.aws_launch_template_lpfat,
-    module.ec2_lpfat_windows
-  ]
+  #   extra_vars = {
+  #     "tasks" = ["install_lpfat_tools"]
+  #   }
 }
-
-resource "aws_security_group_rule" "windows_allow_netbios_from_linux" {
-  type                     = "ingress"
-  from_port                = 139
-  to_port                  = 139
-  protocol                 = "tcp"
-  source_security_group_id = module.aws_launch_template_lpfat.aws_security_group.id
-  security_group_id        = module.ec2_lpfat_windows.security_group_id
-  description              = "Allow NetBIOS Session Service from Linux ASG instances"
-
-  depends_on = [
-    module.aws_launch_template_lpfat,
-    module.ec2_lpfat_windows
-  ]
-}
-
-resource "aws_security_group_rule" "windows_allow_rpc_from_linux" {
-  type                     = "ingress"
-  from_port                = 135
-  to_port                  = 135
-  protocol                 = "tcp"
-  source_security_group_id = module.aws_launch_template_lpfat.aws_security_group.id
-  security_group_id        = module.ec2_lpfat_windows.security_group_id
-  description              = "Allow RPC Endpoint Mapper from Linux ASG instances"
-
-  depends_on = [
-    module.aws_launch_template_lpfat,
-    module.ec2_lpfat_windows
-  ]
-}
-
-# Regras de egress para Linux conectar ao Windows via SMB
-resource "aws_security_group_rule" "linux_allow_smb_to_windows" {
-  type                     = "egress"
-  from_port                = 445
-  to_port                  = 445
-  protocol                 = "tcp"
-  source_security_group_id = module.ec2_lpfat_windows.security_group_id
-  security_group_id        = module.aws_launch_template_lpfat.aws_security_group.id
-  description              = "Allow SMB/CIFS to Windows instance for Scopus BRADESCO directories"
-
-  depends_on = [
-    module.aws_launch_template_lpfat,
-    module.ec2_lpfat_windows
-  ]
-}
-
-resource "aws_security_group_rule" "linux_allow_netbios_to_windows" {
-  type                     = "egress"
-  from_port                = 139
-  to_port                  = 139
-  protocol                 = "tcp"
-  source_security_group_id = module.ec2_lpfat_windows.security_group_id
-  security_group_id        = module.aws_launch_template_lpfat.aws_security_group.id
-  description              = "Allow NetBIOS Session Service to Windows instance"
-
-  depends_on = [
-    module.aws_launch_template_lpfat,
-    module.ec2_lpfat_windows
-  ]
-}
-
-resource "aws_security_group_rule" "linux_allow_rpc_to_windows" {
-  type                     = "egress"
-  from_port                = 135
-  to_port                  = 135
-  protocol                 = "tcp"
-  source_security_group_id = module.ec2_lpfat_windows.security_group_id
-  security_group_id        = module.aws_launch_template_lpfat.aws_security_group.id
-  description              = "Allow RPC Endpoint Mapper to Windows instance"
-
-  depends_on = [
-    module.aws_launch_template_lpfat,
-    module.ec2_lpfat_windows
-  ]
-}
-
-# ============================================
-# 1. MODIFICAÇÃO NO ARQUIVO ec2.tf
-# ============================================
-# Substitua o bloco instance_security_group do módulo ec2_lpfat_windows por este:
 
 module "ec2_lpfat_windows" {
   source = "git@gitlab.core-services.leaseplan.systems:shared/terraform_modules/aws/aws-instance.git?ref=v5.0.0"
@@ -222,25 +63,11 @@ module "ec2_lpfat_windows" {
         description = "Allow access to RDP"
       },
       {
-        from_port                = 445
-        to_port                  = 445
-        protocol                 = "tcp"
-        source_security_group_id = module.aws_launch_template_lpfat.aws_security_group.id
-        description              = "Allow SMB/CIFS access from Linux ASG instances for Scopus BRADESCO directories"
-      },
-      {
-        from_port                = 139
-        to_port                  = 139
-        protocol                 = "tcp"
-        source_security_group_id = module.aws_launch_template_lpfat.aws_security_group.id
-        description              = "Allow NetBIOS Session Service from Linux ASG instances"
-      },
-      {
-        from_port                = 135
-        to_port                  = 135
-        protocol                 = "tcp"
-        source_security_group_id = module.aws_launch_template_lpfat.aws_security_group.id
-        description              = "Allow RPC Endpoint Mapper from Linux ASG instances"
+        from_port                 = 445
+        to_port                   = 445
+        protocol                  = "tcp"
+        source_security_group_id  = module.aws_launch_template_lpfat.aws_security_group.id
+        description               = "Allow SMB (TCP/445) from LPFAT Linux ASG"
       }
     ]
     egress_rules = [
@@ -255,10 +82,22 @@ module "ec2_lpfat_windows" {
   }
 }
 
-# ============================================
-# 2. MODIFICAÇÃO NO ARQUIVO alb.tf
-# ============================================
-# Adicione esta regra de egress no bloco instance_security_group do módulo aws_launch_template_lpfat:
+
+// Linux
+module "awx_provision" {
+
+  source = "git@gitlab.core-services.leaseplan.systems:shared/terraform_modules/aws/aws-awx-callback.git?ref=v1.3.0"
+
+  template_id     = "4702"
+  os_type         = "al2"
+  region          = var.aws_region
+  workload_number = local.workload_index
+  environment_id  = local.environment_identifier
+
+  extra_vars = {
+    "tasks" = ["install_lpfat_tools"]
+  }
+}
 
 module "aws_launch_template_lpfat" {
   source = "git::git@gitlab.core-services.leaseplan.systems:shared/terraform_modules/aws/aws-launch-template.git?ref=v5.0.1"
@@ -308,57 +147,106 @@ module "aws_launch_template_lpfat" {
         to_port     = 57222
         protocol    = "tcp"
         cidr_blocks = ["187.72.125.121/32"]
-        description = "Allow SFTP connection"
       },
       {
-        from_port                = 445
-        to_port                  = 445
-        protocol                 = "tcp"
-        source_security_group_id = module.ec2_lpfat_windows.security_group_id
-        description              = "Allow SMB/CIFS to Windows instance for Scopus BRADESCO directories"
-      },
-      {
-        from_port                = 139
-        to_port                  = 139
-        protocol                 = "tcp"
-        source_security_group_id = module.ec2_lpfat_windows.security_group_id
-        description              = "Allow NetBIOS Session Service to Windows instance"
-      },
-      {
-        from_port                = 135
-        to_port                  = 135
-        protocol                 = "tcp"
-        source_security_group_id = module.ec2_lpfat_windows.security_group_id
-        description              = "Allow RPC Endpoint Mapper to Windows instance"
-      }
+      from_port                  = 445
+      to_port                    = 445
+      protocol                   = "tcp"
+      destination_security_group_id = module.ec2_lpfat_windows.aws_security_group.id
+      description                = "Allow SMB (TCP/445) to LPFAT Windows"
+    }
     ]
   }
 
-  # ... resto da configuração permanece igual ...
+  block_device_mappings = [{
+    device_name = "/dev/sda1"
+    no_device   = 0
+    ebs = {
+      volume_type           = "gp3"
+      volume_size           = 100
+      delete_on_termination = true
+      encrypted             = true
+      kms_key_id            = module.shared_data.kms_key.arn
+  } }]
+
+  tag_specifications = [
+    {
+      resource_type = "volume"
+      tags          = local.tags_lt
+    },
+    {
+      resource_type = "instance"
+      tags          = local.tags_lt
+    }
+  ]
+  tags = local.tags
 }
 
-# ============================================
-# 3. OPCIONAL: Adicionar output para facilitar referências
-# ============================================
-# Crie um arquivo outputs.tf ou adicione ao existente:
+module "aws_autoscaling_lpfat" {
+  source = "git@gitlab.core-services.leaseplan.systems:shared/terraform_modules/aws/aws-autoscaling-group.git?ref=v5.0.0"
 
-output "windows_instance_private_ip" {
-  value       = module.ec2_lpfat_windows.private_ip
-  description = "Private IP of the Windows EC2 instance for SMB mounting"
+  name             = format("asg-%s-%s-sae1-lpfat-01", local.workload_number, local.environment_identifier)
+  min_size         = local.min_size
+  max_size         = local.max_size
+  desired_capacity = local.desired_capacity
+
+  health_check_type   = "EC2"
+  vpc_zone_identifier = module.shared_data.vpc.private_subnet_ids
+  target_group_arns   = [module.aws_alb_lpfat.lb_target_groups.tg-p.arn]
+
+  launch_template = {
+    id      = module.aws_launch_template_lpfat.launch_template_id
+    version = module.aws_launch_template_lpfat.launch_template_latest_version
+  }
+
+  depends_on = [module.aws_launch_template_lpfat]
+
+  tags = local.tags
+
+  instance_refresh = {
+    strategy = "Rolling"
+    preferences = {
+      checkpoint_delay       = 600
+      instance_warmup        = 300
+      min_healthy_percentage = 50
+    }
+  }
 }
 
-output "windows_instance_id" {
-  value       = module.ec2_lpfat_windows.id
-  description = "Instance ID of the Windows EC2"
-}
+
+module "aws_alb_lpfat" {
+  source = "git@gitlab.core-services.leaseplan.systems:shared/terraform_modules/aws/aws-alb.git?ref=v5.0.1"
+
+  name            = format("alb-%s-%s-sae1-lpfat-lb01", local.workload_number, local.environment_identifier)
+  subnets         = module.shared_data.vpc.private_subnet_ids
+  security_groups = [module.aws_security_load_balancer.id]
+  certificate_arn = aws_acm_certificate.acm_internal[0].arn
+  internal        = true
+
+  targets = [
+    {
+      name              = "tg-p"
+      port              = 8080
+      type              = "instance"
+      listener_protocol = "HTTP"
+      target_protocol   = "HTTP"
+      rules             = []
+
+      stickiness = {
+        type            = "lb_cookie"
+        cookie_duration = "86400" #1day
+      }
+    }
 
 
-resource "aws_security_group_rule" "allow_smb_from_linux" {
-  type                     = "ingress"
-  from_port                = 445
-  to_port                  = 445
-  protocol                 = "tcp"
-  security_group_id        = aws_security_group.win_sg.id
-  source_security_group_id = aws_security_group.linux_sg.id
-  description              = "Allow SMB from LPFAT Linux"
+  ]
+  https_listener = {
+    type              = "forward"
+    port              = 443
+    target_group_name = "tg-p"
+    ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
+  }
+
+  tags = local.tags
 }
+
