@@ -1,3 +1,56 @@
+Planning failed. Terraform encountered an error while generating this plan.
+╷
+│ Error: Invalid value for variable
+│ 
+│   on ec2.tf line 130, in module "aws_launch_template_lpfat":
+│  130:   instance_security_group = {
+│  131:     name = format("sgp-%s-%s-asg-lpfat", local.workload_number, local.environment_identifier)
+│  132:     ingress_rules = [
+│  133:       {
+│  134:         from_port                = 8080
+│  135:         to_port                  = 8080
+│  136:         protocol                 = "tcp"
+│  137:         source_security_group_id = module.aws_security_load_balancer.id
+│  138:         description              = "Allow inbound HTTP from ALB"
+│  139:       }
+│  140:     ]
+│  141:     egress_rules = [
+│  142:       {
+│  143:         from_port   = 57222
+│  144:         to_port     = 57222
+│  145:         protocol    = "tcp"
+│  146:         cidr_blocks = ["187.72.125.121/32"]
+│  147:       },
+│  148:       {
+│  149:         from_port                     = 445
+│  150:         to_port                       = 445
+│  151:         protocol                      = "tcp"
+│  152:         destination_security_group_id = ["10.0.0.0/8"]
+│  153:         description                   = "Allow SMB (TCP/445) to LPFAT Windows"
+│  154:       }
+│  155:     ]
+│  156:   }
+│     ├────────────────
+│     │ var.instance_security_group.egress_rules is list of object with 2 elements
+│     │ var.instance_security_group.ingress_rules is list of object with 1 element
+│ 
+│ One of the following must be set cidr_blocks, ipv6_cidr_blocks,
+│ prefix_list_ids, self, or source_security_group_id in
+│ `instance_security_group.ingress_rules.*` and
+│ `instance_security_group.egress_rules.*`.
+│ 
+│ This was checked by the validation rule at
+│ .terraform/modules/aws_launch_template_lpfat/variables.tf:457,3-13.
+╵
+Cleaning up project directory and file based variables
+00:00
+ERROR: Job failed: command terminated with exit code 1
+
+
+
+
+
+
 │ Error: Cycle: module.ec2_lpfat_windows.var.instance_security_group (validation), module.ec2_lpfat_windows.var.instance_security_group (expand), module.ec2_lpfat_windows.aws_security_group.security_group, module.ec2_lpfat_windows.output.aws_security_group (expand), module.aws_launch_template_lpfat.var.instance_security_group (expand), module.aws_launch_template_lpfat.var.instance_security_group (validation), module.aws_launch_template_lpfat.aws_security_group.security_group, module.aws_launch_template_lpfat.output.aws_security_group (expand)
 │ 
 
