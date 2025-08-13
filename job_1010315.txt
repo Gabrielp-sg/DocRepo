@@ -1,3 +1,18 @@
+- name: Descobrir IP da máquina Windows no inventory
+  set_fact:
+    win_ip: "{{ hostvars[groups['tag_leaseplan_os_type_windows'][0]]['ansible_host'] | default(hostvars[groups['tag_leaseplan_os_type_windows'][0]]['inventory_hostname']) }}"
+  when: groups['tag_leaseplan_os_type_windows'] is defined and groups['tag_leaseplan_os_type_windows'] | length > 0
+
+- name: Debug - Mostrar IP descoberto
+  debug:
+    msg: "IP da máquina Windows: {{ win_ip }}"
+
+
+- name: Descobrir IP da instância Windows via AWS
+  set_fact:
+    win_ip: "{{ lookup('aws_ec2', 'tag:leaseplan_os_type=windows tag:Environment=' + env_name, region='sa-east-1') | json_query('[0].private_ip_address') }}"
+
+
 Planning failed. Terraform encountered an error while generating this plan.
 ╷
 │ Error: Invalid value for variable
