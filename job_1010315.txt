@@ -1,3 +1,10 @@
+- name: Descobrir IP da máquina Windows com fallback
+  set_fact:
+    win_ip: "{{ hostvars[groups['tag_leaseplan_os_type_windows'][0]]['ec2_private_ip_address'] | default(hostvars[groups['tag_leaseplan_os_type_windows'][0]]['private_ip_address']) | default(hostvars[groups['tag_leaseplan_os_type_windows'][0]]['ansible_host']) }}"
+  when: groups['tag_leaseplan_os_type_windows'] is defined
+
+
+
 - name: Descobrir IP da máquina Windows no inventory
   set_fact:
     win_ip: "{{ hostvars[groups['tag_leaseplan_os_type_windows'][0]]['ansible_host'] | default(hostvars[groups['tag_leaseplan_os_type_windows'][0]]['inventory_hostname']) }}"
