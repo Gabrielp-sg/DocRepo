@@ -1,3 +1,152 @@
+# ... tasks anteriores ...
+
+- name: Install pacotes necessários para CIFS
+  ansible.builtin.package:
+    name: 
+      - cifs-utils
+      - samba-client
+    state: present
+  become: true
+
+- name: Buscar credenciais SMB do AWS Secrets Manager
+  shell: |
+    aws secretsmanager get-secret-value \
+      --region sa-east-1 \
+      --secret-id {{ secret_smb }} \
+      --query SecretString \
+      --output text
+  register: smb_secret_raw
+  no_log: true
+  become: true
+
+- name: Parse credenciais SMB
+  set_fact:
+    smb_credentials: "{{ smb_secret_raw.stdout | from_json }}"
+  no_log: true
+
+- name: Create Samba credentials directory
+  ansible.builtin.file:
+    path: /etc/samba
+    state: directory
+    mode: '0755'
+  become: true
+
+- name: Create CIFS credentials file
+  ansible.builtin.copy:
+    content: |
+      username={{ smb_credentials.username }}
+      password={{ smb_credentials.password }}
+      domain=.
+    dest: /etc/samba/cred_lpfat
+    mode: '0600'
+    owner: root
+    group: root
+  become: true
+  no_log: true
+
+- name: Create mount points
+  ansible.builtin.file:
+    path: "/mnt/bradesco/{{ item | lower }}"
+    state: directory
+    mode: '0755'
+  become: true
+  loop:
+    - ENTRADA
+    - SAIDA
+
+- name: Descobrir IP privado da máquina Windows
+  set_fact:
+    win_ip: "{{ hostvars[groups['tag_leaseplan_os_type_windows'][0]]['ec2_private_ip_address'] }}"
+  when: groups['tag_leaseplan_os_type_windows'] is defined
+
+- name: Debug - IP da máquina Windows (sem mostrar credenciais)
+  debug:
+    msg: "Montando compartilhamentos CIFS de: {{ win_ip }}"
+
+- name: Ensure CIFS share mounted
+  mount:
+    src: "//{{ win_ip }}/{{ item }}"
+    path: "/mnt/bradesco/{{ item | lower }}"
+    fstype: cifs
+    opts: "credentials=/etc/samba/cred_lpfat,uid=1000,gid=1000,file_mode=0777,dir_mode=0777,sec=ntlmssp,vers=3.0"
+    state: mounted
+  loop:
+    - ENTRADA
+    - SAIDA
+  become: true
+
+# ... resto das tasks ...
+
+---
+- name: Buscar credenciais SMB do AWS Secrets Manager
+  ansible.windows.win_shell: |
+    $secretJson = aws secretsmanager get-secret-value `
+      --region sa-east-1 `
+      --secret-id {{ secret_smb }} `
+      --query SecretString `
+      --output text
+    $secret = $secretJson | ConvertFrom-Json
+    @{
+      username = $secret.username
+      password = $secret.password
+    } | ConvertTo-Json
+  register: smb_credentials_raw
+  no_log: true
+
+- name: Parse credenciais SMB para Windows
+  set_fact:
+    smb_credentials: "{{ smb_credentials_raw.stdout | from_json }}"
+  no_log: true
+
+- name: set remote desktop users
+  ansible.windows.win_group_membership:
+    name: remote desktop users
+    members: "{{ remote_desktop_users }}"
+    state: present
+
+- name: set local admins
+  ansible.windows.win_group_membership:
+    name: administrators
+    members: "{{ local_administrators }}"
+    state: present
+
+- name: Create Windows user for SMB authentication
+  ansible.windows.win_user:
+    name: "{{ smb_credentials.username }}"
+    password: "{{ smb_credentials.password }}"
+    password_never_expires: yes
+    state: present
+    groups:
+      - Users
+  no_log: true
+
+- name: Set permissions on directories
+  ansible.windows.win_acl:
+    path: C:\STCPCLT_BRADESCO\O0055BRADESCO\{{ item }}
+    user: "{{ smb_credentials.username }}"
+    rights: FullControl
+    type: allow
+    state: present
+  loop: [ "ENTRADA", "SAIDA" ]
+
+- name: Create SMB shares
+  ansible.windows.win_share:
+    path: C:\STCPCLT_BRADESCO\O0055BRADESCO\{{ item }}
+    name: "{{ item }}"
+    full: "{{ smb_credentials.username }}"
+  loop: [ "ENTRADA", "SAIDA" ]
+
+
+
+
+
+
+
+
+
+
+
+
 - name: Verificar configuração dos compartilhamentos
   ansible.windows.win_shell: |
     Get-SmbShare | Where-Object {$_.Name -in @('ENTRADA','SAIDA')} | Select-Object Name, Path, AccountName
