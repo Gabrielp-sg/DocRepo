@@ -1,3 +1,28 @@
+{
+  "msg": "Error mounting /mnt/bradesco/entrada: mount error(13): Permission denied\nRefer to the mount.cifs(8) manual page (e.g. man mount.cifs) and kernel log messages (dmesg)\n",
+  "invocation": {
+    "module_args": {
+      "src": "//10.132.37.102/ENTRADA",
+      "path": "/mnt/bradesco/entrada",
+      "fstype": "cifs",
+      "opts": "vers=3.1.1,credentials=/etc/samba/cred_lpfat,uid=1000,gid=1000",
+      "state": "mounted",
+      "boot": true,
+      "dump": "0",
+      "passno": "0",
+      "backup": false,
+      "fstab": null
+    }
+  },
+  "_ansible_no_log": false,
+  "changed": false,
+  "item": "ENTRADA",
+  "ansible_loop_var": "item",
+  "_ansible_item_label": "ENTRADA"
+}
+
+
+
 - name: Descobrir IP da máquina Windows com fallback
   set_fact:
     win_ip: "{{ hostvars[groups['tag_leaseplan_os_type_windows'][0]]['ec2_private_ip_address'] | default(hostvars[groups['tag_leaseplan_os_type_windows'][0]]['private_ip_address']) | default(hostvars[groups['tag_leaseplan_os_type_windows'][0]]['ansible_host']) }}"
