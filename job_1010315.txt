@@ -1,41 +1,9 @@
-/usr/local/lib/python3.8/site-packages/paramiko/transport.py:236: CryptographyDeprecationWarning: Blowfish has been deprecated
-  "class": algorithms.Blowfish,
-
-PLAY [tag_leaseplan_os_type_windows] *******************************************
-
-TASK [Gathering Facts] *********************************************************
-fatal: [ec2-0072-d-sae1-lpfatwin-lp]: FAILED! => {"msg": "The powershell shell family is incompatible with the sudo become plugin"}
-...ignoring
-
-TASK [join the domain] *********************************************************
-
-TASK [domain_join : check for aws_region variable] *****************************
-skipping: [ec2-0072-d-sae1-lpfatwin-lp]
-
-TASK [domain_join : check for workload_name variable] **************************
-skipping: [ec2-0072-d-sae1-lpfatwin-lp]
-
-TASK [domain_join : check vault secret path] ***********************************
-skipping: [ec2-0072-d-sae1-lpfatwin-lp]
-
-TASK [domain_join : set hostname fact] *****************************************
-ok: [ec2-0072-d-sae1-lpfatwin-lp]
-
-TASK [domain_join : load tasks based on the distribution] **********************
-fatal: [ec2-0072-d-sae1-lpfatwin-lp]: FAILED! => {"msg": "No file was found when using first_found."}
-...ignoring
-
-TASK [Create Windows user for SMB authentication] ******************************
-fatal: [ec2-0072-d-sae1-lpfatwin-lp]: FAILED! => {"msg": "The powershell shell family is incompatible with the sudo become plugin"}
-...ignoring
-
-TASK [Set permissions on directories] ******************************************
-fatal: [ec2-0072-d-sae1-lpfatwin-lp]: FAILED! => {"msg": "The powershell shell family is incompatible with the sudo become plugin"}
-...ignoring
-
-TASK [Create SMB shares] *******************************************************
-fatal: [ec2-0072-d-sae1-lpfatwin-lp]: FAILED! => {"msg": "The powershell shell family is incompatible with the sudo become plugin"}
-...ignoring
-
-PLAY RECAP *********************************************************************
-ec2-0072-d-sae1-lpfatwin-lp : ok=6    changed=0    unreachable=0    failed=0    skipped=3    rescued=0    ignored=5   
+resource "aws_security_group_rule" "allow_smb_from_linux" {
+  type                     = "ingress"
+  from_port                = 445
+  to_port                  = 445
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.win_sg.id
+  source_security_group_id = aws_security_group.linux_sg.id
+  description              = "Allow SMB from LPFAT Linux"
+}
