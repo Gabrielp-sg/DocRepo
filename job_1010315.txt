@@ -1,6 +1,67 @@
 │ Error: Cycle: module.aws_launch_template_lpfat.var.instance_security_group (validation), module.ec2_lpfat_windows.output.aws_security_group (expand), module.ec2_lpfat_windows.aws_security_group_rule.ingress_security_group_rules, module.ec2_lpfat_windows.aws_ebs_volume.additional_disks, module.ec2_lpfat_windows.aws_volume_attachment.additional_disks_attachment, module.ec2_lpfat_windows.output.primary_network_interface_id (expand), module.ec2_lpfat_windows.aws_security_group_rule.egress_security_group_rules, module.ec2_lpfat_windows.aws_security_group_rule.default_egress_security_group_rules, module.ec2_lpfat_windows.output.public_ip (expand), module.ec2_lpfat_windows.aws_security_group_rule.default_ingress_security_group_rules, module.ec2_lpfat_windows (close), module.ec2_lpfat_windows.output.instance_state (expand), module.ec2_lpfat_windows.output.arn (expand), module.ec2_lpfat_windows.output.public_dns (expand), module.ec2_lpfat_windows.output.private_ip (expand), module.ec2_lpfat_windows.output.aws_instance (expand), module.ec2_lpfat_windows.output.availability_zone (expand), module.ec2_lpfat_windows.output.capacity_reservation_specification (expand), module.ec2_lpfat_windows.output.password_data (expand), module.ec2_lpfat_windows.output.outpost_arn (expand), module.ec2_lpfat_windows.output.private_dns (expand), module.ec2_lpfat_windows.var.instance_security_group (validation), module.ec2_lpfat_windows.var.instance_security_group (expand), module.ec2_lpfat_windows.aws_security_group.security_group, module.ec2_lpfat_windows.aws_instance.instance, module.ec2_lpfat_windows.output.id (expand), module.aws_launch_template_lpfat.var.instance_security_group (expand), module.aws_launch_template_lpfat.aws_security_group.security_group, module.aws_launch_template_lpfat.output.aws_security_group (expand)
 │ 
 │ 
+
+│ Error: Unsupported attribute
+│ 
+│   on sg_smb.tf line 7, in resource "aws_security_group_rule" "windows_allow_smb_from_linux":
+│    7:   security_group_id        = module.ec2_lpfat_windows.security_group_id
+│     ├────────────────
+│     │ module.ec2_lpfat_windows is a object
+│ 
+│ This object does not have an attribute named "security_group_id".
+╵
+╷
+│ Error: Unsupported attribute
+│ 
+│   on sg_smb.tf line 22, in resource "aws_security_group_rule" "windows_allow_netbios_from_linux":
+│   22:   security_group_id        = module.ec2_lpfat_windows.security_group_id
+│     ├────────────────
+│     │ module.ec2_lpfat_windows is a object
+│ 
+│ This object does not have an attribute named "security_group_id".
+╵
+╷
+│ Error: Unsupported attribute
+│ 
+│   on sg_smb.tf line 37, in resource "aws_security_group_rule" "windows_allow_rpc_from_linux":
+│   37:   security_group_id        = module.ec2_lpfat_windows.security_group_id
+│     ├────────────────
+│     │ module.ec2_lpfat_windows is a object
+│ 
+│ This object does not have an attribute named "security_group_id".
+╵
+╷
+│ Error: Unsupported attribute
+│ 
+│   on sg_smb.tf line 51, in resource "aws_security_group_rule" "linux_allow_smb_to_windows":
+│   51:   source_security_group_id = module.ec2_lpfat_windows.security_group_id
+│     ├────────────────
+│     │ module.ec2_lpfat_windows is a object
+│ 
+│ This object does not have an attribute named "security_group_id".
+╵
+╷
+│ Error: Unsupported attribute
+│ 
+│   on sg_smb.tf line 66, in resource "aws_security_group_rule" "linux_allow_netbios_to_windows":
+│   66:   source_security_group_id = module.ec2_lpfat_windows.security_group_id
+│     ├────────────────
+│     │ module.ec2_lpfat_windows is a object
+│ 
+│ This object does not have an attribute named "security_group_id".
+╵
+╷
+│ Error: Unsupported attribute
+│ 
+│   on sg_smb.tf line 81, in resource "aws_security_group_rule" "linux_allow_rpc_to_windows":
+│   81:   source_security_group_id = module.ec2_lpfat_windows.security_group_id
+│     ├────────────────
+│     │ module.ec2_lpfat_windows is a object
+│ 
+│ This object does not have an attribute named "security_group_id".
+
+
 resource "aws_security_group_rule" "windows_allow_smb_from_linux" {
   type                     = "ingress"
   from_port                = 445
