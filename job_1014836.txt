@@ -1,0 +1,874 @@
+/usr/local/lib/python3.8/site-packages/paramiko/transport.py:236: CryptographyDeprecationWarning: Blowfish has been deprecated
+  "class": algorithms.Blowfish,
+
+PLAY [tag_leaseplan_os_type_linux] *********************************************
+
+TASK [Gathering Facts] *********************************************************
+[WARNING]: Platform linux on host ec2-0072-a-sae1-lpfat-lp is using the
+discovered Python interpreter at /usr/bin/python3.6, but future installation of
+another Python interpreter could change the meaning of that path. See
+https://docs.ansible.com/ansible-
+core/2.12/reference_appendices/interpreter_discovery.html for more information.
+ok: [ec2-0072-a-sae1-lpfat-lp]
+
+TASK [Install LPFAT required tools] ********************************************
+included: /runner/project/tasks/install_lpfat_tools.yml for ec2-0072-a-sae1-lpfat-lp
+
+TASK [Debug Linux configuration - start] ***************************************
+ok: [ec2-0072-a-sae1-lpfat-lp] => {
+    "msg": "--------------- Linux configuration started ---------------"
+}
+
+TASK [Upgrade all packages] ****************************************************
+ok: [ec2-0072-a-sae1-lpfat-lp]
+
+TASK [Install sshpass] *********************************************************
+ok: [ec2-0072-a-sae1-lpfat-lp]
+
+TASK [Change instance timezone] ************************************************
+changed: [ec2-0072-a-sae1-lpfat-lp]
+
+TASK [This command will install jfrog cli] *************************************
+ok: [ec2-0072-a-sae1-lpfat-lp]
+
+TASK [Set vault token] *********************************************************
+ok: [ec2-0072-a-sae1-lpfat-lp]
+
+TASK [List repository contents to find Corretto] *******************************
+ok: [ec2-0072-a-sae1-lpfat-lp]
+
+TASK [Show repository structure] ***********************************************
+ok: [ec2-0072-a-sae1-lpfat-lp] => {
+    "repo_contents.json": {
+        "children": [
+            {
+                "folder": false,
+                "uri": "/QualysCloudAgent_5.2.0.12.exe"
+            },
+            {
+                "folder": true,
+                "uri": "/EventGlobalDocumentIndexV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceMasterAgreementBulkV1"
+            },
+            {
+                "folder": true,
+                "uri": "/servicebrokerquotepricingv1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceSupplierV2"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceSupplierV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceLeaseContractManagementLeaseObjectV1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventVehicleReferencePrice"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceVehicleReferencePriceV1"
+            },
+            {
+                "folder": false,
+                "uri": "/cis_builtkit_rhel8_v1.zip"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceValidationToolV1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventCustomerSalesLeadConversionV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceClaimAccidentManagementV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceAccessManagement"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceCaseQualification"
+            },
+            {
+                "folder": false,
+                "uri": "/AlteryxAISInstall_2022.3.1.395.exe"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceCustomerRequestV1"
+            },
+            {
+                "folder": false,
+                "uri": "/falcon-sensor-7.07.0-16206.amzn2.x86_64.rpm"
+            },
+            {
+                "folder": true,
+                "uri": "/EventTransportRequestV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceUserManagement"
+            },
+            {
+                "folder": false,
+                "uri": "/RayVentory_Inventory_Agent.msi"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceExternalVehicleSupplierOrder"
+            },
+            {
+                "folder": true,
+                "uri": "/EventRepairMaintenanceTiresJobV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceEntityStandardsV1"
+            },
+            {
+                "folder": false,
+                "uri": "/apache-tomcat-10.1.30.tar.gz"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceServiceManagementInsuranceV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceBufferAccountingV1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventFairWearTearDamageChargesV1"
+            },
+            {
+                "folder": false,
+                "uri": "/splunkforwarder-9.1.2-b6b9c8185839-x64-release.msi"
+            },
+            {
+                "folder": false,
+                "uri": "/splunkforwarder-9.1.2-b6b9c8185839.x86_64.rpm"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceConfigurePriceQuoteV1"
+            },
+            {
+                "folder": false,
+                "uri": "/WindowsSensor.LionLanner.exe"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceServiceManagementFinesV1"
+            },
+            {
+                "folder": false,
+                "uri": "/SSMS-Setup-ENU.exe"
+            },
+            {
+                "folder": true,
+                "uri": "/EventContractLifecycleManagementGuaranteeLetterV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceAuth0UserManagement"
+            },
+            {
+                "folder": false,
+                "uri": "/cis_buildkit_amazon_linux_2.zip"
+            },
+            {
+                "folder": true,
+                "uri": "/EventDataDisposalRemarketing"
+            },
+            {
+                "folder": true,
+                "uri": "/ProductPartnerConnectSales"
+            },
+            {
+                "folder": true,
+                "uri": "/EventMasterAgreementV1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventCustomerSalesAccountManagerV1"
+            },
+            {
+                "folder": false,
+                "uri": "/RayVentory_Inventory_Agent_12.4.0.11732.msi"
+            },
+            {
+                "folder": true,
+                "uri": "/EventCustomerSalesQuoteV1"
+            },
+            {
+                "folder": false,
+                "uri": "/SPEDContabil_w32-10.0.2.exe"
+            },
+            {
+                "folder": false,
+                "uri": "/jre-8u351-windows-x64.exe"
+            },
+            {
+                "folder": false,
+                "uri": "/oracle-database-ee-19c-1.0-1.x86_64.rpm"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceCounterpartyDueDiligenceV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceTestExternalSpectralRuleV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceContactV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceContactV2"
+            },
+            {
+                "folder": true,
+                "uri": "/LPFat"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceCustomerV2"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceCustomerV1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventCustomerSalesOpportunityV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceOrderToDeliveryV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceDomainEventsStoreManager"
+            },
+            {
+                "folder": false,
+                "uri": "/amazon_linux_2023_v1.zip"
+            },
+            {
+                "folder": true,
+                "uri": "/EventFairWearTearAssessmentV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceTest1966V1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventInsuranceManagementInsuranceV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceManTestV1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventServiceDefinitionV1"
+            },
+            {
+                "folder": false,
+                "uri": "/IBMiAccess_v1r1.zip"
+            },
+            {
+                "folder": true,
+                "uri": "/EventContractLifecycleManagementCustomerContractV1"
+            },
+            {
+                "folder": false,
+                "uri": "/cis_buildkit_windows_2022_latest.zip"
+            },
+            {
+                "folder": true,
+                "uri": "/EventIntermediaryPartnerV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceSurveyManagementV1"
+            },
+            {
+                "folder": false,
+                "uri": "/splunkforwarder-9.3.2.msi"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceBillingManagementV1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventProcurementTaskListV1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventFairWearTearInspectionReportV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceAccountsReceivableReportingV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceAccountsReceivableV1"
+            },
+            {
+                "folder": false,
+                "uri": "/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm"
+            },
+            {
+                "folder": true,
+                "uri": "/EventCustomerRequest"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceUserIdentityAdminV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceDomainEventOrchestrator"
+            },
+            {
+                "folder": true,
+                "uri": "/EventClaimAccidentV1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventQuoteCalculationV1"
+            },
+            {
+                "folder": false,
+                "uri": "/falcon-sensor-7.07.0-16206.amzn2023.x86_64.rpm"
+            },
+            {
+                "folder": true,
+                "uri": "/EventCounterpartyDueDiligenceV1"
+            },
+            {
+                "folder": false,
+                "uri": "/falcon-sensor-7.07.0-16206.el7.x86_64.rpm"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceServiceManagementRoadsideAssistanceV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceDigitalCommunicationV2"
+            },
+            {
+                "folder": true,
+                "uri": "/org"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceDigitalCommunicationV1"
+            },
+            {
+                "folder": false,
+                "uri": "/LpFat_EmTestes_20240809113734.war"
+            },
+            {
+                "folder": false,
+                "uri": "/EasyWay_062024_v2.zip"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceTaxesV1"
+            },
+            {
+                "folder": true,
+                "uri": "/tanium"
+            },
+            {
+                "folder": false,
+                "uri": "/office365.zip"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceFairWearTearV1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventVehicleReferencePriceV1"
+            },
+            {
+                "folder": false,
+                "uri": "/EasyWay.zip"
+            },
+            {
+                "folder": true,
+                "uri": "/EventOrderToDeliveryOrderAmendmentV1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventPurchaseOrderV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceBusinessPartnerV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceMasterAgreementManagementV1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventBusinessPartnerV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceBusinessPartnerV2"
+            },
+            {
+                "folder": true,
+                "uri": "/ProductDemoproduct1V1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceCustomerSalesV1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventServiceManagementServiceV1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventSupplierV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceCustomerSalesV2"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceCustomerSalesV3"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceContractLifecycleManagementV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceInternalCustomerFinancialRatingV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServicePurchaseOrderV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceServiceManagementCostV1"
+            },
+            {
+                "folder": true,
+                "uri": "/io"
+            },
+            {
+                "folder": false,
+                "uri": "/jdk-20_windows-x64_bin.msi"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceServiceManagementReplacementVehicleV1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventLeaseAccountingContractV1"
+            },
+            {
+                "folder": false,
+                "uri": "/UserLock.zip"
+            },
+            {
+                "folder": false,
+                "uri": "/EasyWay_062024.zip"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceTransportRequestV1"
+            },
+            {
+                "folder": false,
+                "uri": "/userlock-addon-v1.22.0.zip"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceServiceManagementRoadTaxV1"
+            },
+            {
+                "folder": false,
+                "uri": "/QualysCloudAgent_6.0.0.41.rpm"
+            },
+            {
+                "folder": true,
+                "uri": "/EventServiceManagementReplacementVehicleServiceRequestV1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventOrderToDeliveryOrderV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceAccountsPayableV1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventTaxesStandardAuditFileTaxationV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceSupplier"
+            },
+            {
+                "folder": true,
+                "uri": "/helm-mapkubeapis"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceLeaseContractManagementContractV1"
+            },
+            {
+                "folder": false,
+                "uri": "/EFDContribuicoes_w32-5.0.2.exe"
+            },
+            {
+                "folder": true,
+                "uri": "/ProductPartnerConnectQuotePricing"
+            },
+            {
+                "folder": false,
+                "uri": "/splunkforwarder-9.3.2.rpm"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceRepairMaintenanceTyresJobV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceServiceManagementRoadsideAssistanceSupplierV1"
+            },
+            {
+                "folder": false,
+                "uri": "/aws-env-linux-amd64"
+            },
+            {
+                "folder": true,
+                "uri": "/EventContactDriverV1"
+            },
+            {
+                "folder": false,
+                "uri": "/LINUX.X64_193000_db_home.zip"
+            },
+            {
+                "folder": true,
+                "uri": "/EventContractLifecycleManagementRefinanceContractV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceQuotePricingV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceCustomerSalesOrderV1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventMasterAgreementValidationResultV1"
+            },
+            {
+                "folder": false,
+                "uri": "/rvia-12.6.4246.103-103.x86_64.rpm"
+            },
+            {
+                "folder": true,
+                "uri": "/EventSupplierPortalTaskListV1"
+            },
+            {
+                "folder": false,
+                "uri": "/Dirf2022Win64v1.3.exe"
+            },
+            {
+                "folder": true,
+                "uri": "/EventLeaseContractManagementLeaseObjectV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceVehicleSaleV1"
+            },
+            {
+                "folder": false,
+                "uri": "/Access_II_3.7.4.zip"
+            },
+            {
+                "folder": true,
+                "uri": "/EventCustomerCreditCreditCheckV1"
+            },
+            {
+                "folder": false,
+                "uri": "/ManageEngine_ADManager_Plus_64_ver7.1.0.exe"
+            },
+            {
+                "folder": false,
+                "uri": "/CV11_Latest.zip"
+            },
+            {
+                "folder": true,
+                "uri": "/com"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceServiceDefinitionManagementV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceIntermediaryPartnerV2"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceSupplierInvoiceV1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventCustomerV1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventCustomerV2"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceClientPolicyV2"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceServiceDefinitionValueLookUp"
+            },
+            {
+                "folder": false,
+                "uri": "/falcon-sensor-7.07.0-16206.el8.x86_64.rpm"
+            },
+            {
+                "folder": true,
+                "uri": "/EventLeaseContractManagementLeaseObjectV5"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceEmployeeTaskV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceSchemeManagementV1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventLeaseContractManagementLeaseObjectV2"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceLeaseAccountingV1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventVehicleSaleV1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventLeaseContractManagementLeaseChangeV5"
+            },
+            {
+                "folder": true,
+                "uri": "/EventLeaseContractManagementLeaseChangeV1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventLeaseContractManagementLeaseChangeV2"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceInsuranceManagementV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceCustomerCreditV1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventContractLifecycleManagementIndividualLeaseAgreementV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceCustomerTimeline"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceServicePointJobV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceCustomerProfileV1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventServiceManagementInvoiceV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceCustomerRequest"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceTransportRequestPartnerBcaV1"
+            },
+            {
+                "folder": false,
+                "uri": "/userlock-addon-v1.116.5.zip"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceBankValidationV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceVehicleCollectionV1"
+            },
+            {
+                "folder": false,
+                "uri": "/AlteryxInstallx64_2022.3.1.395.exe"
+            },
+            {
+                "folder": true,
+                "uri": "/EventLeaseAccountingInternalOrderV1"
+            },
+            {
+                "folder": false,
+                "uri": "/Teste_Gui.txt"
+            },
+            {
+                "folder": true,
+                "uri": "/EventSchemeV1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventEntityStandardsV1"
+            },
+            {
+                "folder": true,
+                "uri": "/qualys"
+            },
+            {
+                "folder": true,
+                "uri": "/EventContactV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceRepairMaintenanceTyresV2"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceVehicleRentalV1"
+            },
+            {
+                "folder": true,
+                "uri": "/EventLeaseContractManagementContractV2"
+            },
+            {
+                "folder": true,
+                "uri": "/EventLeaseContractManagementContractV1"
+            },
+            {
+                "folder": false,
+                "uri": "/falcon-sensor-7.07.0-16206.amzn2023.aarch64.rpm"
+            },
+            {
+                "folder": true,
+                "uri": "/EventLeaseContractManagementContractV5"
+            },
+            {
+                "folder": false,
+                "uri": "/leaseplan_lz_deploymentclient.zip"
+            },
+            {
+                "folder": true,
+                "uri": "/EventLeaseAccountingCostAllocationV1"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceContractDocumentIndexV1"
+            },
+            {
+                "folder": false,
+                "uri": "/CV11_Latest.tar"
+            },
+            {
+                "folder": false,
+                "uri": "/cis_builtkit_rhel9_v2.zip"
+            },
+            {
+                "folder": true,
+                "uri": "/ServiceIntermediaryPartnerV1"
+            },
+            {
+                "folder": false,
+                "uri": "/rvia-12.4.4136.75-75.x86_64.rpm"
+            }
+        ],
+        "created": "2022-11-04T08:12:06.599Z",
+        "lastModified": "2022-11-04T08:12:06.599Z",
+        "lastUpdated": "2022-11-04T08:12:06.599Z",
+        "path": "/",
+        "repo": "art-0072-generic-virtual",
+        "uri": "https://leaseplan.jfrog.io/artifactory/api/storage/art-0072-generic-virtual"
+    }
+}
+
+TASK [Search for Corretto files in repository] *********************************
+ok: [ec2-0072-a-sae1-lpfat-lp]
+
+TASK [List all repositories available] *****************************************
+ok: [ec2-0072-a-sae1-lpfat-lp]
+
+TASK [Show repositories] *******************************************************
+ok: [ec2-0072-a-sae1-lpfat-lp] => {
+    "msg": "Available repos: ['int-0001-generic-local-lz-platform', 'int-0026-generic-local-api-catalog', 'int-0026-generic-local-ngi-binaries', 'int-0055-generic-local-shared', 'internal-local-generic-platform-artifacts', 'prv-0072-generic-local-default', 'art-0001-generic-virtual', 'art-0002-generic-virtual', 'art-0003-generic-virtual', 'art-0022-generic-virtual', 'art-0023-generic-virtual', 'art-0024-generic-virtual', 'art-0025-generic-virtual', 'art-0026-generic-virtual', 'art-0027-generic-virtual', 'art-0028-generic-virtual', 'art-0029-generic-virtual', 'art-0030-generic-virtual', 'art-0031-generic-virtual', 'art-0032-generic-virtual', 'art-0034-generic-virtual', 'art-0035-generic-virtual', 'art-0036-generic-virtual', 'art-0037-generic-virtual', 'art-0038-generic-virtual', 'art-0039-generic-virtual', 'art-0041-generic-virtual', 'art-0042-generic-virtual', 'art-0043-generic-virtual', 'art-0044-generic-virtual', 'art-0045-generic-virtual', 'art-0046-generic-virtual', 'art-0047-generic-virtual', 'art-0048-generic-virtual', 'art-0049-generic-virtual', 'art-0050-generic-virtual', 'art-0051-generic-virtual', 'art-0052-generic-virtual', 'art-0053-generic-virtual', 'art-0054-generic-virtual', 'art-0055-generic-virtual', 'art-0056-generic-virtual', 'art-0057-generic-virtual', 'art-0058-generic-virtual', 'art-0059-generic-virtual', 'art-0060-generic-virtual', 'art-0061-generic-virtual', 'art-0064-generic-virtual', 'art-0065-generic-virtual', 'art-0066-generic-virtual', 'art-0067-generic-virtual', 'art-0068-generic-virtual', 'art-0069-generic-virtual', 'art-0070-generic-virtual', 'art-0071-generic-virtual', 'art-0072-generic-virtual', 'art-0073-generic-virtual', 'art-0074-generic-virtual', 'art-0075-generic-virtual', 'art-0076-generic-virtual', 'art-0077-generic-virtual', 'art-0078-generic-virtual', 'art-0079-generic-virtual', 'art-0080-generic-virtual', 'art-0081-generic-virtual', 'art-0082-generic-virtual', 'art-0083-generic-virtual', 'art-0084-generic-virtual', 'art-0085-generic-virtual', 'art-0086-generic-virtual', 'art-0087-generic-virtual', 'art-0088-generic-virtual', 'art-0089-generic-virtual', 'art-0090-generic-virtual', 'art-0091-generic-virtual', 'art-0092-generic-virtual', 'art-0093-generic-virtual', 'art-0094-generic-virtual', 'art-0095-generic-virtual', 'art-9980-generic-virtual', 'art-9981-generic-virtual', 'art-9982-generic-virtual', 'art-9983-generic-virtual', 'art-9984-generic-virtual', 'art-9985-generic-virtual', 'art-9986-generic-virtual', 'art-9992-generic-virtual', 'art-9993-generic-virtual', 'art-9994-generic-virtual', 'art-9995-generic-virtual', 'art-9996-generic-virtual', 'art-9997-generic-virtual', 'art-9998-generic-virtual', 'art-9999-generic-virtual', 'prv-0001-generic-virtual', 'prv-0002-generic-virtual', 'prv-0022-generic-virtual', 'prv-0023-generic-virtual', 'prv-0024-generic-virtual', 'prv-0025-generic-virtual', 'prv-0026-generic-virtual', 'prv-0027-generic-virtual', 'prv-0028-generic-virtual', 'prv-0029-generic-virtual', 'prv-0030-generic-virtual', 'prv-0031-generic-virtual', 'prv-0032-generic-virtual', 'prv-0034-generic-virtual', 'prv-0035-generic-virtual', 'prv-0036-generic-virtual', 'prv-0037-generic-virtual', 'prv-0038-generic-virtual', 'prv-0039-generic-virtual', 'prv-0040-generic-virtual', 'prv-9995-generic-virtual', 'prv-9996-generic-virtual', 'prv-9997-generic-virtual', 'prv-9999-generic-virtual']"
+}
+
+TASK [Global search for Corretto file] *****************************************
+ok: [ec2-0072-a-sae1-lpfat-lp]
+
+TASK [Show where Corretto file exists] *****************************************
+ok: [ec2-0072-a-sae1-lpfat-lp] => {
+    "msg": "File found at: [{'uri': 'https://leaseplan.jfrog.io/artifactory/api/storage/prv-0072-generic-local-default/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm'}]"
+}
+
+TASK [Show Corretto search results] ********************************************
+ok: [ec2-0072-a-sae1-lpfat-lp] => {
+    "msg": "Found files: []"
+}
+
+TASK [Fetch OpenJDK Corretto 22 from jfrog] ************************************
+fatal: [ec2-0072-a-sae1-lpfat-lp]: FAILED! => {"changed": false, "dest": "/tmp/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm", "elapsed": 1, "msg": "Request failed", "response": "HTTP Error 400: Bad Request", "status_code": 400, "url": "https://leaseplan.jfrog.io/artifactory/art-0072-generic-virtual/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm"}
+
+PLAY RECAP *********************************************************************
+ec2-0072-a-sae1-lpfat-lp   : ok=16   changed=1    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
