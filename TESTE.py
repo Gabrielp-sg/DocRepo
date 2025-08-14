@@ -3,13 +3,27 @@
 TOKEN="seu_token_aqui"
 AWX_HOST="https://awx.core-services.leaseplan.systems"
 
-# Detalhes completos do template:
-curl -s -H "Authorization: Bearer $TOKEN" \
-     "$AWX_HOST/api/v2/job_templates/4373/" | jq '.'
+# Testar se o token funciona
+curl -H "Authorization: Bearer YOUR_TOKEN" \
+     "https://leaseplan.jfrog.io/artifactory/api/system/ping"
 
-# Verificar se tem provisioning callback habilitado:
-curl -s -H "Authorization: Bearer $TOKEN" \
-     "$AWX_HOST/api/v2/job_templates/4373/" | jq '{name, host_config_key, allow_callbacks, callback_url}'
+# Listar conteúdo do repositório
+curl -H "Authorization: Bearer YOUR_TOKEN" \
+     "https://leaseplan.jfrog.io/artifactory/api/storage/art-0072-generic-virtual/"
+
+# Tentar baixar o arquivo
+curl -H "Authorization: Bearer YOUR_TOKEN" \
+     -o /tmp/test.rpm \
+     "https://leaseplan.jfrog.io/artifactory/art-0072-generic-virtual/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm"
+
+
+
+
+
+
+
+
+
 
 
 # Schedules específicos do template:
