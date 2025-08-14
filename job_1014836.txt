@@ -1,3 +1,12 @@
+shell: |
+    jfrog rt dl "{{ wkl_local_repo_name }}/{{ corretto_pkg }}" /tmp/ \
+      --url "{{ artifactory_url }}" \
+      --access-token "{{ artifactory_access_token }}" --flat=true
+  args:
+    executable: /bin/bash
+
+
+
 /usr/local/lib/python3.8/site-packages/paramiko/transport.py:236: CryptographyDeprecationWarning: Blowfish has been deprecated
   "class": algorithms.Blowfish,
 
