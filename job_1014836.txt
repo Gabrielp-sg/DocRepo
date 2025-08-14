@@ -1,22 +1,47 @@
-# tasks/install_lpfat_tools.yml
-- name: Fetch OpenJDK Corretto 22 from jfrog
-  ansible.builtin.get_url:
-    url: "{{ artifactory_url }}/{{ wkl_local_repo_name }}/{{ corretto_pkg }}"
-    headers:
-      Authorization: "Bearer {{ artifactory_access_token }}"
-      X-JFrog-Art-Api: "{{ artifactory_access_token }}"
-    dest: "/tmp/{{ corretto_pkg }}"
-    validate_certs: true
-    use_proxy: no
-
-shell: |
-    jfrog rt dl "{{ wkl_local_repo_name }}/{{ corretto_pkg }}" /tmp/ \
-      --url "{{ artifactory_url }}" \
-      --access-token "{{ artifactory_access_token }}" --flat=true
-  args:
-    executable: /bin/bash
-
-
+{
+  "status_code": 400,
+  "response": "HTTP Error 400: Bad Request",
+  "url": "https://leaseplan.jfrog.io/artifactory/art-0072-generic-virtual/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm",
+  "dest": "/tmp/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm",
+  "elapsed": 1,
+  "msg": "Request failed",
+  "invocation": {
+    "module_args": {
+      "url": "https://leaseplan.jfrog.io/artifactory/art-0072-generic-virtual/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm",
+      "headers": {
+        "Authorization": "Bearer "
+      },
+      "dest": "/tmp/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm",
+      "validate_certs": true,
+      "force": false,
+      "http_agent": "ansible-httpget",
+      "use_proxy": true,
+      "force_basic_auth": false,
+      "use_gssapi": false,
+      "backup": false,
+      "sha256sum": "",
+      "checksum": "",
+      "timeout": 10,
+      "unredirected_headers": [],
+      "unsafe_writes": false,
+      "url_username": null,
+      "url_password": null,
+      "client_cert": null,
+      "client_key": null,
+      "tmp_dest": null,
+      "mode": null,
+      "owner": null,
+      "group": null,
+      "seuser": null,
+      "serole": null,
+      "selevel": null,
+      "setype": null,
+      "attributes": null
+    }
+  },
+  "_ansible_no_log": false,
+  "changed": false
+}
 
 /usr/local/lib/python3.8/site-packages/paramiko/transport.py:236: CryptographyDeprecationWarning: Blowfish has been deprecated
   "class": algorithms.Blowfish,
