@@ -1,3 +1,39 @@
+
+- name: Fetch OpenJDK Corretto 22 from jfrog
+  get_url:
+    url: "{{ artifactory_url }}/{{ wkl_virt_repo_name }}/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm"
+    url_username: "art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default"
+    url_password: "{{ lookup('hashi_vault', 'secret=artifactory/token/art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default:access_token url={{ vault_url }}') }}"
+    dest: /tmp/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm
+
+
+
+- name: Set vault token
+  set_fact:
+    artifactory_access_token: "{{ lookup('community.hashi_vault.hashi_vault', 'url=' ~ vault_url ~ ' secret=' ~ artifactory_reader_token_path ~ ':access_token') }}"
+
+- name: Fetch OpenJDK Corretto 22 from jfrog
+  ansible.builtin.get_url:
+    url: "{{ artifactory_url }}/{{ wkl_virt_repo_name }}/{{ corretto_pkg }}"
+    headers:
+      Authorization: "Bearer {{ artifactory_access_token }}"
+    dest: "/tmp/{{ corretto_pkg }}"
+    use_proxy: false
+    validate_certs: true
+
+
+artifactory_token: "artifactory/token/art-0072-read-generic-local-default"
+artifactory_url: "https://leaseplan.jfrog.io/artifactory"
+wkl_virt_repo_name: "art-{{ workload_name.split(\"-\")[0] }}-generic-virtual"
+artifactory_bearer_token: "{{ lookup('hashi_vault', 'secret=artifactory/token/art-{{ workload_name.split(\"-\")[0] }}-read-generic-local-default:access_token url={{ vault_url }}') }}"
+vault_url: "https://vault.core-services.leaseplan.systems"
+corretto_pkg: "java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm"
+wkl_prefix: "{{ workload_name.split('-')[0] }}"
+artifactory_reader_user: "art-{{ wkl_prefix }}-read-generic-local-default"
+artifactory_reader_token_path: "artifactory/token/{{ artifactory_reader_user }}"
+
+
+
 {
   "status_code": 400,
   "response": "HTTP Error 400: Bad Request",
