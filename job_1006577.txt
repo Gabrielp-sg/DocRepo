@@ -1,112 +1,44 @@
-# básicos
-sudo apt update
-sudo apt install -y git curl unzip jq fzf ca-certificates gnupg lsb-release
-
-# Vault (repo oficial HashiCorp)
-curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | \
-  sudo tee /etc/apt/sources.list.d/hashicorp.list
-sudo apt update && sudo apt install -y vault
-
-# kubectl (repo oficial Kubernetes)
-sudo mkdir -p /etc/apt/keyrings
-curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /" | \
-  sudo tee /etc/apt/sources.list.d/kubernetes.list
-sudo apt update && sudo apt install -y kubectl
-
-# AWS CLI v2
-curl -o awscliv2.zip "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
-unzip awscliv2.zip
-sudo ./aws/install
-aws --version
-
-
-# ajuste <SeuUsuarioWindows> e o nome da sua chave
-mkdir -p ~/.kube ~/.ssh
-cp /mnt/c/Users/<SeuUsuarioWindows>/.kube/config ~/.kube/config
-chmod 600 ~/.kube/config
-
-cp /mnt/c/Users/<SeuUsuarioWindows>/.ssh/<sua_chave> ~/.ssh/
-chmod 600 ~/.ssh/<sua_chave>
-eval "$(ssh-agent -s)" && ssh-add ~/.ssh/<sua_chave>
-
-
-
-# --- proxy (maiúsculo e minúsculo) ---
-export HTTP_PROXY='http://LPGPZENPROXY.EMEA.LEASEPLANCORP.NET:80'
-export HTTPS_PROXY="$HTTP_PROXY"
-export NO_PROXY='localhost,127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,core-services.leaseplan.systems'
-export http_proxy="$HTTP_PROXY"
-export https_proxy="$HTTPS_PROXY"
-export no_proxy="$NO_PROXY"
-
-# --- variáveis/aliases ---
-export VAULT_ADDR='https://vault.core-services.leaseplan.systems'
-export AWS_DEFAULT_REGION='sa-east-1'    # seu perfil tinha 'sa-east-1' fora e 'eu-west-1' dentro da função. ajuste aqui ao que usar.
-alias k='kubectl'
-
-# fzf keybindings (Ctrl-R / Ctrl-T) se instalado
-if command -v fzf >/dev/null 2>&1; then
-  [ -f /usr/share/doc/fzf/examples/key-bindings.bash ] && . /usr/share/doc/fzf/examples/key-bindings.bash
-  [ -f /usr/share/doc/fzf/examples/completion.bash ] && . /usr/share/doc/fzf/examples/completion.bash
-fi
-
-# --- login no Vault via Okta (seu 'vl' do PowerShell) ---
-vl() {
-  local user
-  read -p "Okta username (firstname.lastname@leaseplan.com): " user
-  vault login -method=okta username="$user"
+{
+  "status_code": 400,
+  "response": "HTTP Error 400: Bad Request",
+  "url": "https://leaseplan.jfrog.io/artifactory/art-0072-generic-virtual/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm",
+  "dest": "/tmp/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm",
+  "elapsed": 1,
+  "msg": "Request failed",
+  "invocation": {
+    "module_args": {
+      "url": "https://leaseplan.jfrog.io/artifactory/art-0072-generic-virtual/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm",
+      "headers": {
+        "Authorization": "Bearer eyJ2Z*****"
+      },
+      "dest": "/tmp/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm",
+      "validate_certs": true,
+      "force": false,
+      "http_agent": "ansible-httpget",
+      "use_proxy": true,
+      "force_basic_auth": false,
+      "use_gssapi": false,
+      "backup": false,
+      "sha256sum": "",
+      "checksum": "",
+      "timeout": 10,
+      "unredirected_headers": [],
+      "unsafe_writes": false,
+      "url_username": null,
+      "url_password": null,
+      "client_cert": null,
+      "client_key": null,
+      "tmp_dest": null,
+      "mode": null,
+      "owner": null,
+      "group": null,
+      "seuser": null,
+      "serole": null,
+      "selevel": null,
+      "setype": null,
+      "attributes": null
+    }
+  },
+  "_ansible_no_log": false,
+  "changed": false
 }
-
-# --- ler credenciais AWS do Vault e preencher aws configure + env ---
-aws_vault_read() {
-  local workload="$1"
-  local profile="${2:-default}"
-  if [ -z "$workload" ]; then
-    echo "uso: aws_vault_read <workload> [profile]"; return 1
-  fi
-  echo "Lendo credenciais de aws/${workload}/creds/infra-userland..."
-  local json
-  if ! json="$(vault read -format=json "aws/${workload}/creds/infra-userland")"; then
-    echo "Falha ao ler do Vault"; return 1
-  fi
-  export AWS_ACCESS_KEY_ID="$(printf '%s' "$json" | jq -r '.data.access_key')"
-  export AWS_SECRET_ACCESS_KEY="$(printf '%s' "$json" | jq -r '.data.secret_key')"
-  local token="$(printf '%s' "$json" | jq -r '.data.security_token // empty')"
-  [ -n "$token" ] && export AWS_SESSION_TOKEN="$token"
-
-  # região padrão (ajuste se necessário)
-  export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-eu-west-1}"
-
-  aws configure set profile.${profile}.aws_access_key_id "$AWS_ACCESS_KEY_ID"
-  aws configure set profile.${profile}.aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
-  aws configure set profile.${profile}.region "$AWS_DEFAULT_REGION"
-  aws configure set default.aws_access_key_id "$AWS_ACCESS_KEY_ID"
-  aws configure set default.aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
-  aws configure set default.region "$AWS_DEFAULT_REGION"
-  aws configure list --profile "$profile"
-  echo "Credenciais carregadas no ambiente e no perfil '$profile'."
-}
-
-
-source ~/.bashrc
-
-
-# 1) logar no Vault via Okta (seu antigo /vl)
-vl
-
-# 2) puxar credenciais AWS a partir do workload
-aws_vault_read 9998-wkl-d   # ajuste para o seu workload
-
-# 3) (EKS) gerar kubeconfig e testar acesso ao cluster
-aws eks update-kubeconfig --region "$AWS_DEFAULT_REGION" --name <nome-do-cluster>
-k get ns
-
-
-git config --global user.name "Seu Nome"
-git config --global user.email "seu.email@empresa.com"
-
-# usar proxy do ambiente no git (se precisar)
-git config --global http.proxy  "$HTTP_PROXY"
-git config --global https.proxy "$HTTPS_PROXY"
