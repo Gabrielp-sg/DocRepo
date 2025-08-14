@@ -1,3 +1,61 @@
+- name: List repository contents to find Corretto
+  uri:
+    url: "{{ artifactory_url }}/api/storage/{{ wkl_virt_repo_name }}/"
+    headers:
+      Authorization: "Bearer {{ artifactory_access_token }}"
+    method: GET
+  register: repo_contents
+  ignore_errors: yes
+
+- name: Show repository structure
+  debug:
+    var: repo_contents.json
+  when: repo_contents.status == 200
+
+- name: Search for Corretto files in repository
+  uri:
+    url: "{{ artifactory_url }}/api/search/artifact?name=*corretto*.rpm&repos={{ wkl_virt_repo_name }}"
+    headers:
+      Authorization: "Bearer {{ artifactory_access_token }}"
+    method: GET
+  register: search_corretto
+  ignore_errors: yes
+
+- name: Show Corretto search results
+  debug:
+    msg: "Found files: {{ search_corretto.json.results | default([]) }}"
+
+
+- name: List all repositories available
+  uri:
+    url: "{{ artifactory_url }}/api/repositories"
+    headers:
+      Authorization: "Bearer {{ artifactory_access_token }}"
+    method: GET
+  register: all_repos
+
+- name: Show repositories
+  debug:
+    msg: "Available repos: {{ all_repos.json | map(attribute='key') | list }}"
+
+- name: Global search for Corretto file
+  uri:
+    url: "{{ artifactory_url }}/api/search/artifact?name={{ corretto_pkg }}"
+    headers:
+      Authorization: "Bearer {{ artifactory_access_token }}"
+    method: GET
+  register: global_search
+  ignore_errors: yes
+
+- name: Show where Corretto file exists
+  debug:
+    msg: "File found at: {{ global_search.json.results | default('FILE NOT FOUND') }}"
+
+
+
+
+
+
 - name: Debug vault token retrieval
   debug:
     msg: "Token length: {{ artifactory_access_token | length }}"
