@@ -1,3 +1,21 @@
+- name: Fetch OpenJDK Corretto 22 from jfrog
+  ansible.builtin.get_url:
+    url: "{{ artifactory_url }}/{{ wkl_virt_repo_name }}/{{ corretto_pkg }}"
+    headers:
+      X-JFrog-Art-Api: "{{ artifactory_access_token }}"
+    dest: "/tmp/{{ corretto_pkg }}"
+    validate_certs: true
+
+- name: Fetch OpenJDK Corretto 22 from jfrog
+  ansible.builtin.get_url:
+    url: "{{ artifactory_url }}/{{ wkl_virt_repo_name }}/{{ corretto_pkg }}"
+    url_username: "{{ artifactory_reader_user }}"
+    url_password: "{{ artifactory_access_token }}"
+    dest: "/tmp/{{ corretto_pkg }}"
+    validate_certs: true
+
+
+
 
 - name: Fetch OpenJDK Corretto 22 from jfrog
   get_url:
