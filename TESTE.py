@@ -1,3 +1,22 @@
+- name: Debug vault token retrieval
+  debug:
+    msg: "Token length: {{ artifactory_access_token | length }}"
+  no_log: false  # Temporariamente para debug (remova depois)
+
+- name: Test token validity
+  uri:
+    url: "{{ artifactory_url }}/api/system/ping"
+    headers:
+      Authorization: "Bearer {{ artifactory_access_token }}"
+    method: GET
+  register: ping_result
+
+- name: Show ping result
+  debug:
+    var: ping_result.status
+
+
+
 # Fazer login para obter token:
 
 TOKEN="seu_token_aqui"
