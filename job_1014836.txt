@@ -1,3 +1,14 @@
+# tasks/install_lpfat_tools.yml
+- name: Fetch OpenJDK Corretto 22 from jfrog
+  ansible.builtin.get_url:
+    url: "{{ artifactory_url }}/{{ wkl_local_repo_name }}/{{ corretto_pkg }}"
+    headers:
+      Authorization: "Bearer {{ artifactory_access_token }}"
+      X-JFrog-Art-Api: "{{ artifactory_access_token }}"
+    dest: "/tmp/{{ corretto_pkg }}"
+    validate_certs: true
+    use_proxy: no
+
 shell: |
     jfrog rt dl "{{ wkl_local_repo_name }}/{{ corretto_pkg }}" /tmp/ \
       --url "{{ artifactory_url }}" \
