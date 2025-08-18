@@ -1,3 +1,43 @@
+# --- S3 bucket TEMPORÁRIA (não altera o módulo/bucket atual)
+module "aws_s3_integration_test" {
+  source = "git@gitlab.core-services.leaseplan.systems:shared/terraform_modules/aws/aws-s3-bucket.git?ref=v5.0.0"
+
+  # => mesmo padrão de nome, só inserindo "-test-"
+  name_prefix   = format("s3-integration-test-%s", module.shared_data.workload.environment_identifier)
+
+  # deixe igual à principal para “ser igual”, mas com:
+  versioning    = true
+  force_destroy = true   # facilita destruir depois mesmo com objetos/versões
+
+  lifecycle_rule = [{
+    id     = "expire_old_versions"
+    status = "Enabled"
+    noncurrent_version_expiration = {
+      noncurrent_days = 10
+    }
+  }]
+
+  tags = local.tags
+}
+
+# --- Pastas apenas na bucket de TESTE
+resource "aws_s3_object" "s3_structure_test" {
+  for_each = toset(local.s3_folders)
+
+  bucket       = module.aws_s3_integration_test.bucket_id
+  key          = each.value
+  content_type = "application/x-directory"
+
+  # mantém o mesmo comportamento de tags que você já usa
+  override_provider {
+    default_tags { tags = {} }
+  }
+
+  depends_on = [module.aws_s3_integration_test]
+}
+
+
+
 #S3 resource
 module "aws_s3_integration" {
   source = "git@gitlab.core-services.leaseplan.systems:shared/terraform_modules/aws/aws-s3-bucket.git?ref=v5.0.0"
