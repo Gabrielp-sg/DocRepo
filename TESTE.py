@@ -1,3 +1,6 @@
+export AWS_REQUEST_CHECKSUM_CALCULATION=WHEN_REQUIRED
+export AWS_RESPONSE_CHECKSUM_VALIDATION=WHEN_REQUIRED
+
 upload failed: .\ to s3://s3-integration-test-d-596599667803-sa-east-1/eCrlv/registros/ Need to rewind the stream <botocore.httpchecksum.AwsChunkedWrapper object at 0x0000022785733A10>, but stream is not seekable
 AM+guimg@LPBR-WDW8AWEF MINGW64 ~/Downloads/crlv/local-folder-path
 $ aws cp ./* "s3://s3-integration-test-d-596599667803-sa-east-1/eCrlv/registros/"
