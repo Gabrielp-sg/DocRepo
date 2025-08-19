@@ -1,3 +1,6 @@
+https://gitlab.core-services.leaseplan.systems/workloads/0072-wkl-lpbr-apps/chatbot
+https://gitlab.core-services.leaseplan.systems/workloads/0072-wkl-lpbr-apps/mobile-app
+
 # DB2 CREDENTIALS
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
