@@ -1,3 +1,39 @@
+---
+# CHATBOT MOBILE API CREDENTIALS
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: api-mobile-app
+  namespace: chatbot
+spec:
+  refreshInterval: 1m
+  secretStoreRef:
+    name: aws-secrets-manager
+    kind: ClusterSecretStore
+  target:
+    name: api-mobile-app
+    creationPolicy: Owner
+  data:
+    - secretKey: api-mobile-app-url
+      remoteRef:
+        key: sct-d-sae1-eks-api-mobile-app
+        property: url
+    - secretKey: api-mobile-app-user
+      remoteRef:
+        key: sct-d-sae1-eks-api-mobile-app
+        property: username
+    - secretKey: api-mobile-app-password
+      remoteRef:
+        key: sct-d-sae1-eks-api-mobile-app
+        property: password
+
+
+
+
+
+
+
+
 # --- S3 bucket TEMPORÁRIA (não altera o módulo/bucket atual)
 module "aws_s3_integration_test" {
   source = "git@gitlab.core-services.leaseplan.systems:shared/terraform_modules/aws/aws-s3-bucket.git?ref=v5.0.0"
