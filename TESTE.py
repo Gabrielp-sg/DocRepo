@@ -1,3 +1,9 @@
+AM+guimg@LPBR-WDW8AWEF MINGW64 ~/Downloads/crlv/local-folder-path
+$ aws cp ./* "s3://s3-integration-test-d-596599667803-sa-east-1/eCrlv/registros/"
+bash: /c/Program Files/Amazon/AWSCLIV2/aws: Argument list too long
+
+
+
 AM+guimg@LPBR-WDW8AWEF MINGW64 ~/code/workloads/chatbot (LPBRCM-3220-test-clone-mobile-app)
 $ git log
 commit d25dd0a927925a699256ce1902468ce53ae506d7 (HEAD -> LPBRCM-3220-test-clone-mobile-app, origin/LPBRCM-3220-test-clone-mobile-app)
