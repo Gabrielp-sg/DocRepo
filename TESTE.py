@@ -1,3 +1,46 @@
+AM+guimg@LPBR-WDW8AWEF MINGW64 ~/code/workloads/chatbot (LPBRCM-3220-test-clone-mobile-app)
+$ git log
+commit d25dd0a927925a699256ce1902468ce53ae506d7 (HEAD -> LPBRCM-3220-test-clone-mobile-app, origin/LPBRCM-3220-test-clone-mobile-app)
+Author: Gabriel.Guimaraes <gabriel.guimaraes-ext@leaseplan.com>
+Date:   Tue Aug 19 14:30:49 2025 -0300
+
+    feat: setup test clone pipeline
+
+commit d193f090dcbcc4d7e206ba1168878a848a2b618b
+Author: Gabriel.Guimaraes <gabriel.guimaraes-ext@leaseplan.com>
+Date:   Tue Aug 19 14:25:34 2025 -0300
+
+    feat: setup test clone pipeline
+
+commit cdf195b604b42389caad70024331d350cdd73cac
+Author: Gabriel.Guimaraes <gabriel.guimaraes-ext@leaseplan.com>
+Date:   Tue Aug 19 14:22:25 2025 -0300
+
+    feat: setup test clone pipeline
+
+commit 7fe400d7013b3a6973240a7b1ff45570d0f996fe
+Merge: 36d8926 2e2e78d
+Author: mario volpe <mario.volpe@leaseplan.com>
+Date:   Tue May 6 01:29:10 2025 +0000
+
+    Merge branch 'revert-36d89269' into 'master'
+
+    Revert "Merge branch 'feature/LPBRCM-2758' into 'master'"
+
+    See merge request workloads/0072-wkl-lpbr-apps/chatbot!12
+
+commit 2e2e78d86443bdac15c5d5439f316c2f32e7630f
+Author: mario volpe <mario.volpe@leaseplan.com>
+Date:   Tue May 6 01:29:10 2025 +0000
+
+    Revert "Merge branch 'feature/LPBRCM-2758' into 'master'"
+
+AM+guimg@LPBR-WDW8AWEF MINGW64 ~/code/workloads/chatbot (LPBRCM-3220-test-clone-mobile-app)
+$ git revert 36d8926
+error: commit 36d89269aa087417146dc70fe98b8eb34eca94c6 is a merge but no -m option was given.
+fatal: revert failed
+
+
 https://gitlab.core-services.leaseplan.systems/workloads/0072-wkl-lpbr-apps/chatbot
 https://gitlab.core-services.leaseplan.systems/workloads/0072-wkl-lpbr-apps/mobile-app
 
