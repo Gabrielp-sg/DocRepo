@@ -1,3 +1,4 @@
+upload failed: .\ to s3://s3-integration-test-d-596599667803-sa-east-1/eCrlv/registros/ Need to rewind the stream <botocore.httpchecksum.AwsChunkedWrapper object at 0x0000022785733A10>, but stream is not seekable
 AM+guimg@LPBR-WDW8AWEF MINGW64 ~/Downloads/crlv/local-folder-path
 $ aws cp ./* "s3://s3-integration-test-d-596599667803-sa-east-1/eCrlv/registros/"
 bash: /c/Program Files/Amazon/AWSCLIV2/aws: Argument list too long
