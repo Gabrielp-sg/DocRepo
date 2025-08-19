@@ -1,3 +1,242 @@
+# DB2 CREDENTIALS
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: db2-chatbot
+  namespace: chatbot
+spec:
+  refreshInterval: 1m
+  secretStoreRef:
+    name: aws-secrets-manager
+    kind: ClusterSecretStore
+  target:
+    name: db2-chatbot
+    creationPolicy: Owner
+  data:
+    - secretKey: db2-chatbot-username
+      remoteRef:
+        key: sct-d-sae1-eks-db2-crlv
+        property: username
+    - secretKey: db2-chatbot-password
+      remoteRef:
+        key: sct-d-sae1-eks-db2-crlv
+        property: password
+    - secretKey: db2-chatbot-library
+      remoteRef:
+        key: sct-d-sae1-eks-db2-crlv
+        property: library
+
+---
+# SYDLEONE CREDENTIALS
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: sydleone-chatbot
+  namespace: chatbot
+spec:
+  refreshInterval: 1m
+  secretStoreRef:
+    name: aws-secrets-manager
+    kind: ClusterSecretStore
+  target:
+    name: sydleone-chatbot
+    creationPolicy: Owner
+  data:
+    - secretKey: sydleone-chatbot-url
+      remoteRef:
+        key: sct-d-sae1-eks-sydleone-workflow
+        property: url
+    - secretKey: sydleone-chatbot-token
+      remoteRef:
+        key: sct-d-sae1-eks-sydleone-workflow
+        property: token
+
+---
+# BLIP CREDENTIALS
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: blip-chatbot
+  namespace: chatbot
+spec:
+  refreshInterval: 1m
+  secretStoreRef:
+    name: aws-secrets-manager
+    kind: ClusterSecretStore
+  target:
+    name: blip-chatbot
+    creationPolicy: Owner
+  data:
+    - secretKey: blip-chatbot-url
+      remoteRef:
+        key: sct-d-sae1-eks-blip-chatbot
+        property: url
+    - secretKey: blip-chatbot-username
+      remoteRef:
+        key: sct-d-sae1-eks-blip-chatbot
+        property: username
+    - secretKey: blip-chatbot-password
+      remoteRef:
+        key: sct-d-sae1-eks-blip-chatbot
+        property: password
+    - secretKey: blip-chatbot-key
+      remoteRef:
+        key: sct-d-sae1-eks-blip-chatbot
+        property: key
+
+---
+# SUPPLIER CREDENTIALS
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: supplier-chatbot
+  namespace: chatbot
+spec:
+  refreshInterval: 1m
+  secretStoreRef:
+    name: aws-secrets-manager
+    kind: ClusterSecretStore
+  target:
+    name: supplier-chatbot
+    creationPolicy: Owner
+  data:
+    - secretKey: supplier-chatbot-url
+      remoteRef:
+        key: sct-d-sae1-eks-supplier-portal
+        property: url
+
+---
+# POSTGRES BOS CREDENTIALS
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: postgres-bos
+  namespace: chatbot
+spec:
+  refreshInterval: 1m
+  secretStoreRef:
+    name: aws-secrets-manager
+    kind: ClusterSecretStore
+  target:
+    name: postgres-bos
+    creationPolicy: Owner
+  data:
+    - secretKey: postgres-bos-url
+      remoteRef:
+        key: sct-d-sae1-eks-postgres-bos
+        property: url
+    - secretKey: postgres-bos-port
+      remoteRef:
+        key: sct-d-sae1-eks-postgres-bos
+        property: port
+    - secretKey: postgres-bos-database
+      remoteRef:
+        key: sct-d-sae1-eks-postgres-bos
+        property: database
+    - secretKey: postgres-bos-username
+      remoteRef:
+        key: sct-d-sae1-eks-postgres-bos
+        property: username
+    - secretKey: postgres-bos-password
+      remoteRef:
+        key: sct-d-sae1-eks-postgres-bos
+        property: password
+
+---
+# POSTGRES SERVICES CREDENTIALS
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: postgres-services
+  namespace: chatbot
+spec:
+  refreshInterval: 1m
+  secretStoreRef:
+    name: aws-secrets-manager
+    kind: ClusterSecretStore
+  target:
+    name: postgres-services
+    creationPolicy: Owner
+  data:
+    - secretKey: postgres-services-url
+      remoteRef:
+        key: sct-d-sae1-eks-postgres-services
+        property: url
+    - secretKey: postgres-services-port
+      remoteRef:
+        key: sct-d-sae1-eks-postgres-services
+        property: port
+    - secretKey: postgres-services-database
+      remoteRef:
+        key: sct-d-sae1-eks-postgres-services
+        property: database
+    - secretKey: postgres-services-username
+      remoteRef:
+        key: sct-d-sae1-eks-postgres-services
+        property: username
+    - secretKey: postgres-services-password
+      remoteRef:
+        key: sct-d-sae1-eks-postgres-services
+        property: password
+
+---
+# RMT(TICKETLOG) API CREDENTIALS
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: rmt-ticketlog-api
+  namespace: chatbot
+spec:
+  refreshInterval: 1m
+  secretStoreRef:
+    name: aws-secrets-manager
+    kind: ClusterSecretStore
+  target:
+    name: rmt-ticketlog-api
+    creationPolicy: Owner
+  data:
+    - secretKey: rmt-ticketlog-api-url
+      remoteRef:
+        key: sct-d-sae1-eks-api-rmt-ticketlog
+        property: url
+    - secretKey: rmt-ticketlog-api-username
+      remoteRef:
+        key: sct-d-sae1-eks-api-rmt-ticketlog
+        property: username
+    - secretKey: rmt-ticketlog-api-password
+      remoteRef:
+        key: sct-d-sae1-eks-api-rmt-ticketlog
+        property: password
+
+---
+# CHATBOT MOBILE API CREDENTIALS
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: api-mobile-app
+  namespace: chatbot
+spec:
+  refreshInterval: 1m
+  secretStoreRef:
+    name: aws-secrets-manager
+    kind: ClusterSecretStore
+  target:
+    name: api-mobile-app
+    creationPolicy: Owner
+  data:
+    - secretKey: api-mobile-app-url
+      remoteRef:
+        key: sct-d-sae1-eks-api-mobile-app
+        property: url
+    - secretKey: api-mobile-app-user
+      remoteRef:
+        key: sct-d-sae1-eks-api-mobile-app
+        property: user
+    - secretKey: api-mobile-app-password
+      remoteRef:
+        key: sct-d-sae1-eks-api-mobile-app
+        property: password
+
 ---
 # CHATBOT MOBILE API CREDENTIALS
 apiVersion: external-secrets.io/v1beta1
@@ -26,197 +265,3 @@ spec:
       remoteRef:
         key: sct-d-sae1-eks-api-mobile-app
         property: password
-
-
-
-
-
-
-
-
-# --- S3 bucket TEMPORÁRIA (não altera o módulo/bucket atual)
-module "aws_s3_integration_test" {
-  source = "git@gitlab.core-services.leaseplan.systems:shared/terraform_modules/aws/aws-s3-bucket.git?ref=v5.0.0"
-
-  # => mesmo padrão de nome, só inserindo "-test-"
-  name_prefix   = format("s3-integration-test-%s", module.shared_data.workload.environment_identifier)
-
-  # deixe igual à principal para “ser igual”, mas com:
-  versioning    = true
-  force_destroy = true   # facilita destruir depois mesmo com objetos/versões
-
-  lifecycle_rule = [{
-    id     = "expire_old_versions"
-    status = "Enabled"
-    noncurrent_version_expiration = {
-      noncurrent_days = 10
-    }
-  }]
-
-  tags = local.tags
-}
-
-# --- Pastas apenas na bucket de TESTE
-resource "aws_s3_object" "s3_structure_test" {
-  for_each = toset(local.s3_folders)
-
-  bucket       = module.aws_s3_integration_test.bucket_id
-  key          = each.value
-  content_type = "application/x-directory"
-
-  # mantém o mesmo comportamento de tags que você já usa
-  override_provider {
-    default_tags { tags = {} }
-  }
-
-  depends_on = [module.aws_s3_integration_test]
-}
-
-
-
-#S3 resource
-module "aws_s3_integration" {
-  source = "git@gitlab.core-services.leaseplan.systems:shared/terraform_modules/aws/aws-s3-bucket.git?ref=v5.0.0"
-
-  name_prefix   = format("s3-integration-%s", module.shared_data.workload.environment_identifier)
-  versioning    = true
-  force_destroy = false
-
-  lifecycle_rule = [{
-    id     = "expire_old_versions"
-    status = "Enabled"
-    noncurrent_version_expiration = {
-      noncurrent_days = 10
-    }
-  }]
-  tags = local.tags
-
-}
-
-#S3 folders
-locals {
-  s3_folders = [
-    "eCrlv/registros/",
-    "eMultas/eventos/",
-    "eMultas/eventos/indicacao/",
-    "Workflow/tra/",
-    "TicketLog/Agreements/",
-    "TicketLog/Invoice/",
-  ]
-}
-
-resource "aws_s3_object" "s3_structure" {
-  for_each = toset(local.s3_folders)
-
-  bucket       = module.aws_s3_integration.bucket_id
-  key          = each.value
-  content_type = "application/x-directory"
-
-  override_provider {
-    default_tags {
-      tags = {}
-    }
-  }
-
-  depends_on = [
-    module.aws_s3_integration
-  ]
-}
-
-#IAM for S3
-data "aws_iam_policy_document" "policy_eks_lpbr_access_s3_assume_role_policy" {
-  statement {
-    actions = ["sts:AssumeRoleWithWebIdentity"]
-    effect  = "Allow"
-
-    condition {
-      test     = "StringEquals"
-      variable = "${replace(local.oidc_url, "https://", "")}:sub"
-      values = [
-        "system:serviceaccount:crlv:lpbr",
-        "system:serviceaccount:fines:lpbr-s3",
-        "system:serviceaccount:workflow:lpbr-s3",
-        "system:serviceaccount:glue-etl:lpbr-s3",
-        "system:serviceaccount:ticketlog:lpbr-s3"
-      ]
-    }
-
-    principals {
-      identifiers = [local.oidc_provider_arn]
-      type        = "Federated"
-    }
-  }
-}
-
-data "aws_iam_policy_document" "policy_eks_lpbr_access_s3" {
-  statement {
-    sid    = "ObjectAccess"
-    effect = "Allow"
-    actions = [
-      "s3:List*",
-      "s3:GetObject",
-      "s3:GetObjectAcl",
-      "s3:GetBucketAcl",
-      "s3:GetBucketLocation",
-      "s3:PutObject",
-      "s3:PutObjectAcl",
-      "s3:DeleteObjectVersion",
-      "s3:DeleteObject",
-    ]
-
-    resources = [
-      "arn:aws:s3:::s3-integration-*/*",
-      "arn:aws:s3:::s3-integration-*",
-      "arn:aws:s3:::s3-glue-etl-*/*",
-      "arn:aws:s3:::s3-glue-etl-*",
-    ]
-  }
-}
-
-resource "aws_iam_policy" "policy_eks_lpbr_access_s3" {
-  name        = format("policy-0072-%s-eks-lpbr-access-s3", module.shared_data.workload.environment_identifier)
-  path        = "/"
-  description = "Allow lpbr app to access S3 buckets."
-  policy      = data.aws_iam_policy_document.policy_eks_lpbr_access_s3.json
-  tags        = local.tags
-}
-
-resource "aws_iam_role_policy_attachment" "role_eks_lpbr_access_s3" {
-  role       = aws_iam_role.role_eks_lpbr_access_s3.name
-  policy_arn = aws_iam_policy.policy_eks_lpbr_access_s3.arn
-}
-
-resource "aws_iam_role" "role_eks_lpbr_access_s3" {
-  name                 = format("role-0072-%s-eks-lpbr-access-s3", module.shared_data.workload.environment_identifier)
-  permissions_boundary = local.workload_boundary_arn
-  assume_role_policy   = data.aws_iam_policy_document.policy_eks_lpbr_access_s3_assume_role_policy.json
-  tags                 = local.tags
-}
-
-
-
-code ~/.bashrc
-# no ~/.bash_profile
-[ -f ~/.bashrc ] && . ~/.bashrc
-
-
-# --- Git completion ---
-if [ -f /usr/share/git/completion/git-completion.bash ]; then
-  . /usr/share/git/completion/git-completion.bash
-elif [ -f /mingw64/share/git/completion/git-completion.bash ]; then
-  . /mingw64/share/git/completion/git-completion.bash
-fi
-
-# (Opcional) prompt do Git com o nome do branch
-if [ -f /usr/share/git/completion/git-prompt.sh ]; then
-  . /usr/share/git/completion/git-prompt.sh
-elif [ -f /mingw64/share/git/completion/git-prompt.sh ]; then
-  . /mingw64/share/git/completion/git-prompt.sh
-fi
-# Exemplo simples de prompt mostrando o branch:
-# PS1='[\u@\h \W$(__git_ps1 " (%s)")]$ '
-
-
-source ~/.bashrc
-
-[ -f ~/.git-completion.bash ] && . ~/.git-completion.bash
