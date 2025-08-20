@@ -1,207 +1,113 @@
-# Liste os últimos 15 jobs com mais campos úteis
-curl -s -H "Authorization: Bearer $TOKEN" \
-  "$AWX_HOST/api/v2/job_templates/4373/jobs/?page_size=15&order_by=-created" \
-| jq '.results[] | {id, created, launch_type, started, finished,
-       launched_by: .summary_fields.created_by?.username,
-       job_explanation, controller_node}'
+include:
+  - project: 'templates/gitlab-ci/pipelines'
+    ref: master
+    file: 'kaniko/login.yml'
 
-# Para 1 job específico (troque pelo último ID):
-JOB_ID=1006577
-curl -s -H "Authorization: Bearer $TOKEN" \
-  "$AWX_HOST/api/v2/jobs/$JOB_ID/" \
-| jq '{id, created, launch_type, summary_fields:{created_by, unified_job_template, organization}}'
+workflow:
+  rules:
+    - when: always
 
-# Activity stream do job (costuma expor o actor)
-curl -s -H "Authorization: Bearer $TOKEN" \
-  "$AWX_HOST/api/v2/jobs/$JOB_ID/activity_stream/?order_by=-timestamp" \
-| jq '.results[] | {timestamp, actor: .summary_fields.actor?.username, operation, changes}'
+stages:
+  - build
+  - development
+  - uat
+  - production
 
-JT=4373
-EXEC_ROLE_ID=$(curl -s -H "Authorization: Bearer $TOKEN" \
-  "$AWX_HOST/api/v2/job_templates/$JT/" \
-| jq -r '.summary_fields.object_roles.execute_role.id')
+variables:
+  LZ_KANIKO_EXECUTOR_IMAGE: cr.core-services.leaseplan.systems/lz/lz-kaniko:master
+  LZ_DOCKER_REGISTRY: https://cr.core-services.leaseplan.systems
+  VAULT_AUTH_ROLE: workloads-0072-wkl-lpbr-apps
+  ARTIFACTORY_ROLE_DOCKER: art-0072-write-docker-local-default
+  KANIKO_EXTRA_ARGS: ""
+  KANIKO_EXTRA_ARGS_BUILD: ""
+  DOCKER_FILE: chatbot-agendamento/Dockerfile
+  DOCKER_REGISTRY: cr.core-services.leaseplan.systems/0072
+  DOCKER_IMAGE_NAME: chatbot-agendamento
+  VERSION: 1.1.2
+  container: docker
+  KUBERNETES_MEMORY_REQUEST: 1Gi
+  KUBERNETES_MEMORY_LIMIT: 12Gi
 
-# Usuários com Execute
-curl -s -H "Authorization: Bearer $TOKEN" \
-  "$AWX_HOST/api/v2/roles/$EXEC_ROLE_ID/users/?page_size=200" \
-| jq '.results[] | {id, username, first_name, last_name, email}'
+build:
+  tags:
+    - k8s-scalable
+  stage: build
+  image:  $LZ_KANIKO_EXECUTOR_IMAGE
+  extends:
+    - .kaniko-login
+  script:
+    - |
+      /kaniko/executor \
+        --context $CI_PROJECT_DIR \
+        --dockerfile $CI_PROJECT_DIR/$DOCKER_FILE \
+        --no-push
 
-# Teams com Execute (se houver)
-curl -s -H "Authorization: Bearer $TOKEN" \
-  "$AWX_HOST/api/v2/roles/$EXEC_ROLE_ID/teams/?page_size=200" \
-| jq '.results[] | {id, name}'
+development:
+  tags:
+    - k8s-scalable
+  stage: development
+  dependencies:
+    - build
+  image:  $LZ_KANIKO_EXECUTOR_IMAGE
+  extends:
+    - .kaniko-login
+  before_script:
+    - apk add --no-cache git
+    - git clone git@gitlab.core-services.leaseplan.systems:workloads/0072-wkl-lpbr-apps/mobile-app.git
+    - git checkout develop  
+  script:
+    - echo "Deploying to development environment"
+    - |
+      /kaniko/executor \
+        --context $CI_PROJECT_DIR \
+        --dockerfile $CI_PROJECT_DIR/$DOCKER_FILE \
+        --destination $DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:DEV-$VERSION
+  when: manual
+  environment:
+    name: development
+  only:
+    - develop
 
-# Todos tokens ordenados pelo "modified" (mais recentes primeiro)
-curl -s -H "Authorization: Bearer $TOKEN" \
-  "$AWX_HOST/api/v2/tokens/?order_by=-modified&page_size=200" \
-| jq '.results[] | {id, description, scope, created, modified,
-                    user: .summary_fields.user?.username,
-                    application: .summary_fields.application?.name}'
+uat:
+  tags:
+    - k8s-scalable
+  stage: uat
+  dependencies:
+    - build
+  image:  $LZ_KANIKO_EXECUTOR_IMAGE
+  extends:
+    - .kaniko-login
+  script:
+    - echo "Deploying to uat environment"
+    - |
+      /kaniko/executor \
+        --context $CI_PROJECT_DIR \
+        --dockerfile $CI_PROJECT_DIR/$DOCKER_FILE \
+        --destination $DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:RELEASE-$VERSION
+  when: manual
+  environment:
+    name: uat
+  only:
+    - release
 
-# (Opcional) varrer por usuário — útil se você já tem o "launched by" do UI
-SUSPECT_USER_ID=1089  # troque pelo ID do usuário suspeito
-curl -s -H "Authorization: Bearer $TOKEN" \
-  "$AWX_HOST/api/v2/users/$SUSPECT_USER_ID/tokens/?page_size=200" \
-| jq '.results[] | {id, description, scope, created, modified, application}'
-
-
-# Activity stream do template (pode mostrar quem lançou)
-curl -s -H "Authorization: Bearer $TOKEN" \
-  "$AWX_HOST/api/v2/job_templates/4373/activity_stream/?order_by=-timestamp&page_size=50" \
-| jq '.results[] | {timestamp, actor: .summary_fields.actor?.username, operation, changes}'
-
-# Activity stream da organização, filtrando "job"
-ORG=101
-curl -s -H "Authorization: Bearer $TOKEN" \
-  "$AWX_HOST/api/v2/organizations/$ORG/activity_stream/?order_by=-timestamp&page_size=100" \
-| jq ' .results[] | select(.object1=="job") 
-     | {timestamp, actor: .summary_fields.actor?.username, operation, changes}'
-
-# Workflow gerando esse job?
-curl -s -H "Authorization: Bearer $TOKEN" \
-  "$AWX_HOST/api/v2/unified_jobs/?unified_job_template=4373&launch_type=workflow&order_by=-created" \
-| jq '.count, .results[0]'
-
-# Dependency (ex.: job encadeado)?
-curl -s -H "Authorization: Bearer $TOKEN" \
-  "$AWX_HOST/api/v2/unified_jobs/?unified_job_template=4373&launch_type=dependency&order_by=-created" \
-| jq '.count, .results[0]'
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-AM+guimg@LPBR-WDW8AWEF MINGW64 ~
-$ curl -s -H "Authorization: Bearer $TOKEN" \
-  "$AWX_HOST/api/v2/unified_jobs/?unified_job_template=4373&launch_type=callback&order_by=-created" | jq '.count,.results[0]'
-# Procura execuções por webhook
-curl -s -H "Authorization: Bearer $TOKEN" \
-  "$AWX_HOST/api/v2/unified_jobs/?unified_job_template=4373&launch_type=webhook&order_by=-created" | jq '.count,.results[0]'
-0
-null
-0
-null
-
-AM+guimg@LPBR-WDW8AWEF MINGW64 ~
-$ curl -s -H "Authorization: Bearer $TOKEN" \
-  "$AWX_HOST/api/v2/jobs/$JOB_ID/activity_stream/?order_by=-timestamp" | jq '.results[] | {timestamp,actor,operation}
-> ^C
-
-AM+guimg@LPBR-WDW8AWEF MINGW64 ~
-$ curl -s -H "Authorization: Bearer $TOKEN" \
-  "$AWX_HOST/api/v2/unified_jobs/?unified_job_template=4373&launch_type=callback&order_by=-created" | jq '.count,.results[0]'
-# Procura execuções por webhook
-curl -s -H "Authorization: Bearer $TOKEN" \
-  "$AWX_HOST/api/v2/unified_jobs/?unified_job_template=4373&launch_type=webhook&order_by=-created" | jq '.count,.results[0]'
-# Troque $JOB_ID por um dos IDs (ex: 1006577)
-curl -s -H "Authorization: Bearer $TOKEN" \
-  "$AWX_HOST/api/v2/jobs/$JOB_ID/activity_stream/?order_by=-timestamp" | jq '.results[] | {timestamp,actor,operation}'
-0
-null
-0
-null
-jq: error (at <stdin>:0): Cannot iterate over null (null)
-
-AM+guimg@LPBR-WDW8AWEF MINGW64 ~
-$ curl -s -H "Authorization: Bearer $TOKEN" \
-  "$AWX_HOST/api/v2/job_templates/4373/access_list/?role_level=execute&page_size=200" | jq '.results[] | {type,username,name,summary_fields}'
-jq: error (at <stdin>:0): Cannot iterate over null (null)
-
-AM+guimg@LPBR-WDW8AWEF MINGW64 ~
-$ curl -s -H "Authorization: Bearer $TOKEN"   "$AWX_HOST/api/v2/job_templates/4373/access_list/?role_level=execute&page_size=200" | jq '.results[] | {type,username,name,summary_fields}'
-jq: error (at <stdin>:0): Cannot iterate over null (null)
-
-AM+guimg@LPBR-WDW8AWEF MINGW64 ~
-$ curl -s -H "Authorization: Bearer $TOKEN"   "$AWX_HOST/api/v2/job_templates/4373/access_list/?role_level=execute&page_size=200" | jq '.results[]? | {type,username,name,summary_fields}'
-
-AM+guimg@LPBR-WDW8AWEF MINGW64 ~
-$ curl -s -H "Authorization: Bearer $TOKEN"   "$AWX_HOST/api/v2/unified_jobs/?unified_job_template=4373&launch_type=webhook&order_by=-created" | jq '.count,.results[0]'
-0
-null
-
-AM+guimg@LPBR-WDW8AWEF MINGW64 ~
-$ curl -s -H "Authorization: Bearer $TOKEN"   "$AWX_HOST/api/v2/jobs/$JOB_ID/activity_stream/?order_by=-timestamp" | jq '.results[] | {timestamp,actor,operation}'
-jq: error (at <stdin>:0): Cannot iterate over null (null)
-
-AM+guimg@LPBR-WDW8AWEF MINGW64 ~
-$ curl -s -H "Authorization: Bearer $TOKEN"   "$AWX_HOST/api/v2/jobs/$JOB_ID/activity_stream/?order_by=-timestamp" | jq '.results[]? | {timestamp,actor,operation}'
-
-AM+guimg@LPBR-WDW8AWEF MINGW64 ~
-$ ^[[200~curl -s -H "Authorization: Bearer $TOKEN" "$AWX_HOST/api/v2/users/?page_size=200" \
-> | jq -r '.results[].id' | while read uid; do
->   curl -s -H "Authorization: Bearer $TOKEN" "$AWX_HOST/api/v2/users/$uid/tokens/?page_size=200" \
->   | jq --arg uid "$uid" '.results[] | {user_id:$uid, id, application, scope, created, modified, summary_fields}'
-> curl -s -H "Authorization: Bearer $TOKEN"   "$AWX_HOST/api/v2/jobs/$JOB_ID/activity_stream/?order_by=-timestamp" | jq '.results[]? | {timestamp,actor,operation}'^C                                       
-AM+guimg@LPBR-WDW8AWEF MINGW64 ~
-$ curl -s -H "Authorization: Bearer $TOKEN" "$AWX_HOST/api/v2/users/?page_size=200" \
-| jq -r '.results[].id' | while read uid; do
-  curl -s -H "Authorization: Bearer $TOKEN" "$AWX_HOST/api/v2/users/$uid/tokens/?page_size=200" \
-  | jq --arg uid "$uid" '.results[] | {user_id:$uid, id, application, scope, created, modified, summary_fields}'
-done
-
-AM+guimg@LPBR-WDW8AWEF MINGW64 ~
-$ curl -s -H "Authorization: Bearer $TOKEN" \
-  "$AWX_HOST/api/v2/projects/3869/schedules/" | jq '.results[] | {id,name,enabled,rrule,next_run}'
-{
-  "id": 37,
-  "name": "deploy-lpft-daily-06-am",
-  "enabled": true,
-  "rrule": "DTSTART;TZID=America/Sao_Paulo:20250811T060000 RRULE:INTERVAL=1;FREQ=DAILY",
-  "next_run": "2025-08-11T09:00:00Z"
-}
-
-AM+guimg@LPBR-WDW8AWEF MINGW64 ~
-$ curl -s -H "Authorization: Bearer $TOKEN" \
-  "$AWX_HOST/api/v2/inventories/2073/inventory_sources/" | jq '.results[] | {id,name,source,update_on_launch}'
-{
-  "id": 3591,
-  "name": "AWS",
-  "source": "scm",
-  "update_on_launch": true
-}
-
-AM+guimg@LPBR-WDW8AWEF MINGW64 ~
-$ curl -s -H "Authorization: Bearer $TOKEN" \
-  "$AWX_HOST/api/v2/schedules/?inventory_source=<ID_DO_SOURCE>&enabled=true" | jq '.results[] | {id,name,rrule,next_run}'
-curl -s -H "Authorization: Bearer $TOKEN" \
-  "$AWX_HOST/api/v2/unified_jobs/?unified_job_template=4373&launch_type=workflow&order_by=-created" | jq '.count,.results[0]'
-jq: error (at <stdin>:0): Cannot iterate over null (null)
-0
-null
-
-AM+guimg@LPBR-WDW8AWEF MINGW64 ~
-$ curl -s -H "Authorization: Bearer $TOKEN"   "$AWX_HOST/api/v2/schedules/?inventory_source=<ID_DO_SOURCE>&enabled=true" | jq '.results[]? | {id,name,rrule,next_run}'
-
-AM+guimg@LPBR-WDW8AWEF MINGW64 ~
-$ curl -s -H "Authorization: Bearer $TOKEN"   "$AWX_HOST/api/v2/schedules/?inventory_source=<ID_DO_SOURCE>&enabled=true"
-{"detail":"Schedule has no field named 'inventory_source'"}
-AM+guimg@LPBR-WDW8AWEF MINGW64 ~
-$ curl -s -H "Authorization: Bearer $TOKEN" \
-  "$AWX_HOST/api/v2/job_templates/4373/callback/" | jq '.'
-{
-  "host_config_key": "2e5b6cd0-49d1-11ef-9454-0242ac120002",
-  "matching_hosts": []
-}
-
-AM+guimg@LPBR-WDW8AWEF MINGW64 ~
-$ curl -s -H "Authorization: Bearer $TOKEN" \
-  "$AWX_HOST/api/v2/unified_jobs/?unified_job_template=4373&launch_type=callback&order_by=-created" | jq '.count'
-0
-
-AM+guimg@LPBR-WDW8AWEF MINGW64 ~
-$ curl -s -H "Authorization: Bearer $TOKEN" \
-  "$AWX_HOST/api/v2/schedules/?inventory_source=1921&enabled=true" | jq '.results[] | {id,name,rrule,next_run}'
-jq: error (at <stdin>:0): Cannot iterate over null (null)
-
-AM+guimg@LPBR-WDW8AWEF MINGW64 ~
-$ curl -s -H "Authorization: Bearer $TOKEN"   "$AWX_HOST/api/v2/schedules/?inventory_source=1921&enabled=true" | jq '.results[]? | {id,name,rrule,next_run}'
-
+production:
+  tags:
+    - k8s-scalable
+  stage: production
+  dependencies:
+    - build
+  image:  $LZ_KANIKO_EXECUTOR_IMAGE
+  extends:
+    - .kaniko-login
+  script:
+    - echo "Deploying to production environment"
+    - |
+      /kaniko/executor \
+        --context $CI_PROJECT_DIR \
+        --dockerfile $CI_PROJECT_DIR/$DOCKER_FILE \
+        --destination $DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:$VERSION
+  when: manual
+  environment:
+    name: production
+  only:
+    - master
