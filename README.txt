@@ -1,3 +1,23 @@
+resource "aws_iam_policy" "policy_eks_lpbr_access_s3" {
+  name        = format("policy-0072-%s-eks-lpbr-access-s3", module.shared_data.workload.environment_identifier)
+  path        = "/"
+  description = "Allow lpbr app to access S3 buckets."
+  policy      = data.aws_iam_policy_document.policy_eks_lpbr_access_s3.json
+  tags        = local.tags
+}
+
+resource "aws_iam_role_policy_attachment" "role_eks_lpbr_access_s3" {
+  role       = aws_iam_role.role_eks_lpbr_access_s3.name
+  policy_arn = aws_iam_policy.policy_eks_lpbr_access_s3.arn
+}
+
+resource "aws_iam_role" "role_eks_lpbr_access_s3" {
+  name                 = format("role-0072-%s-eks-lpbr-access-s3", module.shared_data.workload.environment_identifier)
+  permissions_boundary = local.workload_boundary_arn
+  assume_role_policy   = data.aws_iam_policy_document.policy_eks_lpbr_access_s3_assume_role_policy.json
+  tags                 = local.tags
+}
+
 # =============================================================================
 # SOLUÇÃO TEMPORÁRIA - Conta de Stage (847447826148)
 # Adicione isso na conta de stage para permitir acesso da conta de produção
