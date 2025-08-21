@@ -1,3 +1,19 @@
+Getting source from Git repository
+00:01
+Fetching changes with git depth set to 20...
+Initialized empty Git repository in /builds/workloads/0072-wkl-lpbr-apps/chatbot/.git/
+Created fresh repository.
+Checking out f1fff21b as detached HEAD (ref is fix/LPBRCM-3220)...
+Skipping Git submodules setup
+Executing "step_script" stage of the job script
+00:00
+$ #!/bin/bash # collapsed multi-line command
+$ apk add --no-cache git
+/scripts-8465-14380319/step_script: eval: line 213: apk: not found
+Cleaning up project directory and file based variables
+00:01
+ERROR: Job failed: command terminated with exit code 127
+
 build:
   tags:
     - k8s-scalable
