@@ -1,3 +1,17 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: data-transfer
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: s3-mover
+  namespace: data-transfer
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::<PROD_ACCOUNT_ID>:role/<ROLE_NAME>
+
+
 apiVersion: batch/v1
 kind: Job
 metadata:
