@@ -1,3 +1,28 @@
+data "aws_iam_policy_document" "policy_eks_lpbr_access_s3" {
+  statement {
+    sid    = "ObjectAccess"
+    effect = "Allow"
+    actions = [
+      "s3:List*",
+      "s3:GetObject",
+      "s3:GetObjectAcl",
+      "s3:GetBucketAcl",
+      "s3:GetBucketLocation",
+      "s3:PutObject",
+      "s3:PutObjectAcl",
+      "s3:DeleteObjectVersion",
+      "s3:DeleteObject",
+    ]
+
+    resources = [
+      "arn:aws:s3:::s3-integration-*/*",
+      "arn:aws:s3:::s3-integration-*",
+      "arn:aws:s3:::s3-glue-etl-*/*",
+      "arn:aws:s3:::s3-glue-etl-*",
+    ]
+  }
+}
+
 # IAM Policy atualizada para incluir acesso cross-account
 data "aws_iam_policy_document" "policy_eks_lpbr_access_s3" {
   statement {
