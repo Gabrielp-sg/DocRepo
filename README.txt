@@ -1,3 +1,66 @@
+# =============================================================================
+# SOLUÇÃO TEMPORÁRIA - Conta de Stage (847447826148)
+# Adicione isso na conta de stage para permitir acesso da conta de produção
+# =============================================================================
+
+# Bucket policy temporária para permitir acesso cross-account
+data "aws_iam_policy_document" "temp_cross_account_bucket_policy" {
+  statement {
+    sid    = "TempCrossAccountAccess"
+    effect = "Allow"
+    
+    principals {
+      type = "AWS"
+      identifiers = [
+        # Role específica da conta de produção que precisa acessar
+        "arn:aws:iam::596599667803:role/role-0072-d-eks-lpbr-access-s3"
+      ]
+    }
+    
+    actions = [
+      "s3:ListBucket",
+      "s3:GetBucketLocation",
+      "s3:GetObject",
+      "s3:GetObjectAcl"
+    ]
+    
+    resources = [
+      # Bucket específico que contém os arquivos
+      "arn:aws:s3:::s3-integration-a-847447826148-sa-east-1",
+      "arn:aws:s3:::s3-integration-a-847447826148-sa-east-1/*"
+    ]
+    
+    # Opcional: Restringir a prefixos específicos se quiser mais segurança
+    # condition {
+    #   test     = "StringLike"
+    #   variable = "s3:prefix"
+    #   values   = ["eCrlv/registros/*"]
+    # }
+  }
+}
+
+# Aplicar a bucket policy temporária
+resource "aws_s3_bucket_policy" "temp_cross_account_access" {
+  bucket = "s3-integration-a-847447826148-sa-east-1"
+  policy = data.aws_iam_policy_document.temp_cross_account_bucket_policy.json
+  
+  # Adicionar tags para lembrar que é temporário
+  depends_on = [
+    # Se o bucket for criado por um módulo, adicione a dependência aqui
+  ]
+}
+
+# =============================================================================
+# PARA REMOVER DEPOIS: 
+# Quando terminar a migração, simplesmente delete este arquivo ou comente 
+# o resource "aws_s3_bucket_policy" acima e execute terraform apply novamente
+# =============================================================================
+
+# Opcional: Output para confirmar que a policy foi aplicada
+output "temp_bucket_policy_applied" {
+  value = "Bucket policy temporária aplicada para: s3-integration-a-847447826148-sa-east-1"
+}
+
 data "aws_iam_policy_document" "policy_eks_lpbr_access_s3" {
   statement {
     sid    = "ObjectAccess"
