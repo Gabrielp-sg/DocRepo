@@ -1,3 +1,50 @@
+build:
+  tags:
+    - k8s-scalable
+  stage: build
+  image:  $LZ_KANIKO_EXECUTOR_IMAGE
+  extends:
+    - .kaniko-login
+  before_script:
+    - apk add --no-cache git
+    - git clone git@gitlab.core-services.leaseplan.systems:workloads/0072-wkl-lpbr-apps/mobile-app.git
+    - cd mobile-app && git checkout develop && cd .. && ls mobile-app  
+    
+  script:
+    - |
+      /kaniko/executor \
+        --context $CI_PROJECT_DIR \
+        --dockerfile $CI_PROJECT_DIR/$DOCKER_FILE \
+        --no-push
+
+development:
+  tags:
+    - k8s-scalable
+  stage: development
+  dependencies:
+    - build
+  image:  $LZ_KANIKO_EXECUTOR_IMAGE
+  extends:
+    - .kaniko-login
+  before_script:
+    - apk add --no-cache git
+    - git clone git@gitlab.core-services.leaseplan.systems:workloads/0072-wkl-lpbr-apps/mobile-app.git
+    - cd mobile-app && git checkout develop && cd ..  
+  script:
+    - echo "Deploying to development environment"
+    - |
+      /kaniko/executor \
+        --context $CI_PROJECT_DIR \
+        --dockerfile $CI_PROJECT_DIR/$DOCKER_FILE \
+        --destination $DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:DEV-$VERSION
+  when: manual
+  environment:
+    name: development
+  only:
+    - develop
+
+
+
 Author: Ilija Matoski (ilija.matoski@leaseplan.com)
 Date built: 2024-10-22T19:07:20Z
 Commit: 6def1a113712f3bc4de10995d0458d1d68101a89
