@@ -1,44 +1,222 @@
-{
-  "status_code": 400,
-  "response": "HTTP Error 400: Bad Request",
-  "url": "https://leaseplan.jfrog.io/artifactory/art-0072-generic-virtual/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm",
-  "dest": "/tmp/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm",
-  "elapsed": 1,
-  "msg": "Request failed",
-  "invocation": {
-    "module_args": {
-      "url": "https://leaseplan.jfrog.io/artifactory/art-0072-generic-virtual/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm",
-      "headers": {
-        "Authorization": "Bearer eyJ2Z*****"
-      },
-      "dest": "/tmp/java-22-amazon-corretto-devel-22.0.2.9-1.x86_64.rpm",
-      "validate_certs": true,
-      "force": false,
-      "http_agent": "ansible-httpget",
-      "use_proxy": true,
-      "force_basic_auth": false,
-      "use_gssapi": false,
-      "backup": false,
-      "sha256sum": "",
-      "checksum": "",
-      "timeout": 10,
-      "unredirected_headers": [],
-      "unsafe_writes": false,
-      "url_username": null,
-      "url_password": null,
-      "client_cert": null,
-      "client_key": null,
-      "tmp_dest": null,
-      "mode": null,
-      "owner": null,
-      "group": null,
-      "seuser": null,
-      "serole": null,
-      "selevel": null,
-      "setype": null,
-      "attributes": null
-    }
-  },
-  "_ansible_no_log": false,
-  "changed": false
-}
+include:
+  - project: 'templates/gitlab-ci/pipelines'
+    ref: master
+    file: 'kaniko/login.yml'
+
+workflow:
+  rules:
+    - when: always
+
+stages:
+  - build
+  - development
+  - uat
+  - production
+
+variables:
+  LZ_KANIKO_EXECUTOR_IMAGE: cr.core-services.leaseplan.systems/lz/lz-kaniko:master
+  LZ_DOCKER_REGISTRY: https://cr.core-services.leaseplan.systems
+  VAULT_AUTH_ROLE: workloads-0072-wkl-lpbr-apps
+  ARTIFACTORY_ROLE_DOCKER: art-0072-write-docker-local-default
+  KANIKO_EXTRA_ARGS: ""
+  KANIKO_EXTRA_ARGS_BUILD: ""
+  DOCKER_FILE: chatbot-agendamento/Dockerfile
+  DOCKER_REGISTRY: cr.core-services.leaseplan.systems/0072
+  DOCKER_IMAGE_NAME: chatbot-agendamento
+  VERSION: 2.0.x8
+  container: docker
+  KUBERNETES_MEMORY_REQUEST: 1Gi
+  KUBERNETES_MEMORY_LIMIT: 12Gi
+
+build:
+  tags:
+    - k8s-scalable
+  stage: build
+  image:  $LZ_KANIKO_EXECUTOR_IMAGE
+  extends:
+    - .kaniko-login
+  before_script:
+    - apk add --no-cache git
+    - git clone git@gitlab.core-services.leaseplan.systems:workloads/0072-wkl-lpbr-apps/mobile-app.git
+    - git checkout develop      
+  script:
+    - |
+      /kaniko/executor \
+        --context $CI_PROJECT_DIR \
+        --dockerfile $CI_PROJECT_DIR/$DOCKER_FILE \
+        --no-push
+
+development:
+  tags:
+    - k8s-scalable
+  stage: development
+  dependencies:
+    - build
+  image:  $LZ_KANIKO_EXECUTOR_IMAGE
+  extends:
+    - .kaniko-login
+  before_script:
+    - apk add --no-cache git
+    - git clone git@gitlab.core-services.leaseplan.systems:workloads/0072-wkl-lpbr-apps/mobile-app.git
+    - git checkout develop  
+  script:
+    - echo "Deploying to development environment"
+    - |
+      /kaniko/executor \
+        --context $CI_PROJECT_DIR \
+        --dockerfile $CI_PROJECT_DIR/$DOCKER_FILE \
+        --destination $DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:DEV-$VERSION
+  when: manual
+  environment:
+    name: development
+  only:
+    - develop
+
+uat:
+  tags:
+    - k8s-scalable
+  stage: uat
+  dependencies:
+    - build
+  image:  $LZ_KANIKO_EXECUTOR_IMAGE
+  extends:
+    - .kaniko-login
+  script:
+    - echo "Deploying to uat environment"
+    - |
+      /kaniko/executor \
+        --context $CI_PROJECT_DIR \
+        --dockerfile $CI_PROJECT_DIR/$DOCKER_FILE \
+        --destination $DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:RELEASE-$VERSION
+  when: manual
+  environment:
+    name: uat
+  only:
+    - release
+
+production:
+  tags:
+    - k8s-scalable
+  stage: production
+  dependencies:
+    - build
+  image:  $LZ_KANIKO_EXECUTOR_IMAGE
+  extends:
+    - .kaniko-login
+  script:
+    - echo "Deploying to production environment"
+    - |
+      /kaniko/executor \
+        --context $CI_PROJECT_DIR \
+        --dockerfile $CI_PROJECT_DIR/$DOCKER_FILE \
+        --destination $DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:$VERSION
+  when: manual
+  environment:
+    name: production
+  only:
+    - master
+
+
+    INFO[0066] Cmd: /bin/sh                                 
+INFO[0066] Args: [-c cd "mobile-app"]                   
+INFO[0066] Running: [/bin/sh -c cd "mobile-app"]        
+/bin/sh: line 0: cd: mobile-app: No such file or directory
+error building image: error building stage: failed to execute command: waiting for process to exit: exit status 1
+
+Cleaning up project directory and file based variables
+
+ERROR: Job failed: command terminated with exit code 1
+
+
+FROM cr.core-services.leaseplan.systems/hub.docker.com/amazoncorretto:21 as builder
+
+ARG APPLICATION_PORT
+ARG SUPPLIER_URL
+ARG SYDLEONE_MAX_ATTEMPT
+ARG SYDLEONE_ATTEMPT_INTERVAL
+ARG SYDLEONE_URL
+ARG SYDLEONE_TOKEN
+ARG AWS_SQS_QUEUE_BLIP
+ARG AWS_WEB_IDENTITY_TOKEN_FILE
+ARG AWS_ROLE_ARN
+ARG AWS_ROLE_SESSION_NAME
+ARG ERROR_URI
+ARG EVENT_URI
+ARG ISSUER_URI
+ARG DB2_LIBRARY
+ARG DB2_PASSWORD
+ARG DB2_USERNAME
+ARG POSTGRES_SERVICES_URL
+ARG POSTGRES_SERVICES_PORT
+ARG POSTGRES_SERVICES_DATABASE
+ARG POSTGRES_SERVICES_USERNAME
+ARG POSTGRES_SERVICES_PASSWORD
+ARG POSTGRES_BOS_URL
+ARG POSTGRES_BOS_PORT
+ARG POSTGRES_BOS_DATABASE
+ARG POSTGRES_BOS_USERNAME
+ARG POSTGRES_BOS_PASSWORD
+ARG RMT_API_USER
+ARG RMT_API_PASSWORD
+ARG RMT_API_URL
+
+
+ENV APPLICATION_PORT=$APPLICATION_PORT
+ENV SUPPLIER_URL=$SUPPLIER_URL
+ENV SYDLEONE_MAX_ATTEMPT=$SYDLEONE_MAX_ATTEMPT
+ENV SYDLEONE_ATTEMPT_INTERVAL=$SYDLEONE_ATTEMPT_INTERVAL
+ENV SYDLEONE_URL=$SYDLEONE_URL
+ENV SYDLEONE_TOKEN=$SYDLEONE_TOKEN
+ENV AWS_SQS_QUEUE_BLIP=$AWS_SQS_QUEUE_BLIP
+ENV AWS_WEB_IDENTITY_TOKEN_FILE=$AWS_WEB_IDENTITY_TOKEN_FILE
+ENV AWS_ROLE_ARN=$AWS_ROLE_ARN
+ENV AWS_ROLE_SESSION_NAME=$AWS_ROLE_SESSION_NAME
+ENV ERROR_URI=$ERROR_URI
+ENV EVENT_URI=$EVENT_URI
+ENV ISSUER_URI=$ISSUER_URI
+ENV DB2_LIBRARY=$DB2_LIBRARY
+ENV DB2_PASSWORD=$DB2_PASSWORD
+ENV DB2_USERNAME=$DB2_USERNAME
+ENV MAVEN_HOME /usr/share/maven
+ENV POSTGRES_BOS_URL=$POSTGRES_BOS_URL
+ENV POSTGRES_BOS_PORT=$POSTGRES_BOS_PORT
+ENV POSTGRES_BOS_DATABASE=$POSTGRES_BOS_DATABASE
+ENV POSTGRES_BOS_USERNAME=$POSTGRES_BOS_USERNAME
+ENV POSTGRES_BOS_PASSWORD=$POSTGRES_BOS_PASSWORD
+ENV POSTGRES_SERVICES_URL=$POSTGRES_SERVICES_URL
+ENV POSTGRES_SERVICES_PORT=$POSTGRES_SERVICES_PORT
+ENV POSTGRES_SERVICES_DATABASE=$POSTGRES_SERVICES_DATABASE
+ENV POSTGRES_SERVICES_USERNAME=$POSTGRES_SERVICES_USERNAME
+ENV POSTGRES_SERVICES_PASSWORD=$POSTGRES_SERVICES_PASSWORD
+ENV RMT_API_USER=$RMT_API_USER
+ENV RMT_API_PASSWORD=$RMT_API_PASSWORD
+ENV RMT_API_URL=$RMT_API_URL
+
+COPY --from=maven:3.9.4-eclipse-temurin-11 ${MAVEN_HOME} ${MAVEN_HOME}
+COPY --from=maven:3.9.4-eclipse-temurin-11 /usr/local/bin/mvn-entrypoint.sh /usr/local/bin/mvn-entrypoint.sh
+COPY --from=maven:3.9.4-eclipse-temurin-11 /usr/share/maven/ref/settings-docker.xml /usr/share/maven/ref/settings-docker.xml
+
+RUN ln -s ${MAVEN_HOME}/bin/mvn /usr/bin/mvn
+
+RUN cd "mobile-app"
+RUN mvn clean install
+RUN ls -la
+RUN cd ..
+
+ARG MAVEN_VERSION=3.9.4
+ARG USER_HOME_DIR="/root"
+ENV MAVEN_CONFIG "$USER_HOME_DIR/.m2"
+ENTRYPOINT ["/usr/local/bin/mvn-entrypoint.sh"]
+
+WORKDIR /usr/src/app
+COPY . .
+
+RUN yes | keytool -trustcacerts -keystore "/usr/lib/jvm/java-21-amazon-corretto/lib/security/cacerts" -storepass changeit -importcert -file "/usr/src/app/certificados/ZscalerIntermediateRootCA-zscloud.net.crt" -alias ZScaler
+
+RUN yes | keytool -trustcacerts -keystore "/usr/lib/jvm/java-21-amazon-corretto/lib/security/cacerts" -storepass changeit -importcert -file "/usr/src/app/certificados/repo.maven.apache.org.crt" -alias RepoMaven
+
+RUN mvn clean package
+
+FROM cr.core-services.leaseplan.systems/hub.docker.com/amazoncorretto:21-alpine-full
+COPY --from=builder /usr/src/app/chatbot-agendamento/target/chatbot-agendamento-2.0.x8.jar /usr
+ENTRYPOINT ["java","-jar","/usr/chatbot-agendamento-2.0.x8.jar"]
