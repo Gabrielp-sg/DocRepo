@@ -1,3 +1,191 @@
+Author: Ilija Matoski (ilija.matoski@leaseplan.com)
+Date built: 2024-10-22T19:07:20Z
+Commit: 6def1a113712f3bc4de10995d0458d1d68101a89
+Version: 0.13.26
+GOOS: linux
+GOARCH: amd64
+Compiled with: go1.23.1
+$ if [[ -z "$VAULT_AUTH_ROLE" ]]; then # collapsed multi-line command
+$ # Check if Harbor credentials are set and configure authentication # collapsed multi-line command
+Configuring Harbor authentication...
+$ # Check if ECR credentials are set and configure authentication # collapsed multi-line command
+Skipping configuring ECR Kaniko docker authentication as LZ_ECR_DOCKER_REGISTRY_URL is null.
+$ /kaniko/executor \ # collapsed multi-line command
+INFO[0000] Resolved base name cr.core-services.leaseplan.systems/hub.docker.com/amazoncorretto:21 to builder 
+INFO[0000] Retrieving image manifest maven:3.9.4-eclipse-temurin-11 
+INFO[0000] Retrieving image maven:3.9.4-eclipse-temurin-11 from registry index.docker.io 
+INFO[0000] Storing source image from stage maven:3.9.4-eclipse-temurin-11 at path /kaniko/stages/maven:3.9.4-eclipse-temurin-11 
+INFO[0015] Retrieving image manifest maven:3.9.4-eclipse-temurin-11 
+INFO[0015] Returning cached image manifest              
+INFO[0015] Storing source image from stage maven:3.9.4-eclipse-temurin-11 at path /kaniko/stages/maven:3.9.4-eclipse-temurin-11 
+INFO[0031] Retrieving image manifest maven:3.9.4-eclipse-temurin-11 
+INFO[0031] Returning cached image manifest              
+INFO[0031] Storing source image from stage maven:3.9.4-eclipse-temurin-11 at path /kaniko/stages/maven:3.9.4-eclipse-temurin-11 
+INFO[0045] Retrieving image manifest cr.core-services.leaseplan.systems/hub.docker.com/amazoncorretto:21 
+INFO[0045] Retrieving image cr.core-services.leaseplan.systems/hub.docker.com/amazoncorretto:21 from registry cr.core-services.leaseplan.systems 
+INFO[0046] Retrieving image manifest cr.core-services.leaseplan.systems/hub.docker.com/amazoncorretto:21-alpine-full 
+INFO[0046] Retrieving image cr.core-services.leaseplan.systems/hub.docker.com/amazoncorretto:21-alpine-full from registry cr.core-services.leaseplan.systems 
+INFO[0047] Built cross stage deps: map[0:[/usr/src/app/chatbot-agendamento/target/chatbot-agendamento-2.0.x8.jar]] 
+INFO[0047] Retrieving image manifest cr.core-services.leaseplan.systems/hub.docker.com/amazoncorretto:21 
+INFO[0047] Returning cached image manifest              
+INFO[0047] Executing 0 build triggers                   
+INFO[0047] Building stage 'cr.core-services.leaseplan.systems/hub.docker.com/amazoncorretto:21' [idx: '0', base-idx: '-1'] 
+INFO[0047] Unpacking rootfs as cmd COPY --from=maven:3.9.4-eclipse-temurin-11 ${MAVEN_HOME} ${MAVEN_HOME} requires it. 
+INFO[0053] ARG APPLICATION_PORT                         
+INFO[0053] ARG SUPPLIER_URL                             
+INFO[0053] ARG SYDLEONE_MAX_ATTEMPT                     
+INFO[0053] ARG SYDLEONE_ATTEMPT_INTERVAL                
+INFO[0053] ARG SYDLEONE_URL                             
+INFO[0053] ARG SYDLEONE_TOKEN                           
+INFO[0053] ARG AWS_SQS_QUEUE_BLIP                       
+INFO[0053] ARG AWS_WEB_IDENTITY_TOKEN_FILE              
+INFO[0053] ARG AWS_ROLE_ARN                             
+INFO[0053] ARG AWS_ROLE_SESSION_NAME                    
+INFO[0053] ARG ERROR_URI                                
+INFO[0053] ARG EVENT_URI                                
+INFO[0053] ARG ISSUER_URI                               
+INFO[0053] ARG DB2_LIBRARY                              
+INFO[0053] ARG DB2_PASSWORD                             
+INFO[0053] ARG DB2_USERNAME                             
+INFO[0053] ARG POSTGRES_SERVICES_URL                    
+INFO[0053] ARG POSTGRES_SERVICES_PORT                   
+INFO[0053] ARG POSTGRES_SERVICES_DATABASE               
+INFO[0053] ARG POSTGRES_SERVICES_USERNAME               
+INFO[0053] ARG POSTGRES_SERVICES_PASSWORD               
+INFO[0053] ARG POSTGRES_BOS_URL                         
+INFO[0053] ARG POSTGRES_BOS_PORT                        
+INFO[0053] ARG POSTGRES_BOS_DATABASE                    
+INFO[0053] ARG POSTGRES_BOS_USERNAME                    
+INFO[0053] ARG POSTGRES_BOS_PASSWORD                    
+INFO[0053] ARG RMT_API_USER                             
+INFO[0053] ARG RMT_API_PASSWORD                         
+INFO[0053] ARG RMT_API_URL                              
+INFO[0053] ENV APPLICATION_PORT=$APPLICATION_PORT       
+INFO[0053] ENV SUPPLIER_URL=$SUPPLIER_URL               
+INFO[0053] ENV SYDLEONE_MAX_ATTEMPT=$SYDLEONE_MAX_ATTEMPT 
+INFO[0053] ENV SYDLEONE_ATTEMPT_INTERVAL=$SYDLEONE_ATTEMPT_INTERVAL 
+INFO[0053] ENV SYDLEONE_URL=$SYDLEONE_URL               
+INFO[0053] ENV SYDLEONE_TOKEN=$SYDLEONE_TOKEN           
+INFO[0053] ENV AWS_SQS_QUEUE_BLIP=$AWS_SQS_QUEUE_BLIP   
+INFO[0053] ENV AWS_WEB_IDENTITY_TOKEN_FILE=$AWS_WEB_IDENTITY_TOKEN_FILE 
+INFO[0053] ENV AWS_ROLE_ARN=$AWS_ROLE_ARN               
+INFO[0053] ENV AWS_ROLE_SESSION_NAME=$AWS_ROLE_SESSION_NAME 
+INFO[0053] ENV ERROR_URI=$ERROR_URI                     
+INFO[0053] ENV EVENT_URI=$EVENT_URI                     
+INFO[0053] ENV ISSUER_URI=$ISSUER_URI                   
+INFO[0053] ENV DB2_LIBRARY=$DB2_LIBRARY                 
+INFO[0053] ENV DB2_PASSWORD=$DB2_PASSWORD               
+INFO[0053] ENV DB2_USERNAME=$DB2_USERNAME               
+INFO[0053] ENV MAVEN_HOME /usr/share/maven              
+INFO[0053] ENV POSTGRES_BOS_URL=$POSTGRES_BOS_URL       
+INFO[0053] ENV POSTGRES_BOS_PORT=$POSTGRES_BOS_PORT     
+INFO[0053] ENV POSTGRES_BOS_DATABASE=$POSTGRES_BOS_DATABASE 
+INFO[0053] ENV POSTGRES_BOS_USERNAME=$POSTGRES_BOS_USERNAME 
+INFO[0053] ENV POSTGRES_BOS_PASSWORD=$POSTGRES_BOS_PASSWORD 
+INFO[0053] ENV POSTGRES_SERVICES_URL=$POSTGRES_SERVICES_URL 
+INFO[0053] ENV POSTGRES_SERVICES_PORT=$POSTGRES_SERVICES_PORT 
+INFO[0053] ENV POSTGRES_SERVICES_DATABASE=$POSTGRES_SERVICES_DATABASE 
+INFO[0053] ENV POSTGRES_SERVICES_USERNAME=$POSTGRES_SERVICES_USERNAME 
+INFO[0053] ENV POSTGRES_SERVICES_PASSWORD=$POSTGRES_SERVICES_PASSWORD 
+INFO[0053] ENV RMT_API_USER=$RMT_API_USER               
+INFO[0053] ENV RMT_API_PASSWORD=$RMT_API_PASSWORD       
+INFO[0053] ENV RMT_API_URL=$RMT_API_URL                 
+INFO[0053] COPY --from=maven:3.9.4-eclipse-temurin-11 ${MAVEN_HOME} ${MAVEN_HOME} 
+INFO[0054] Taking snapshot of files...                  
+INFO[0054] COPY --from=maven:3.9.4-eclipse-temurin-11 /usr/local/bin/mvn-entrypoint.sh /usr/local/bin/mvn-entrypoint.sh 
+INFO[0054] Taking snapshot of files...                  
+INFO[0054] COPY --from=maven:3.9.4-eclipse-temurin-11 /usr/share/maven/ref/settings-docker.xml /usr/share/maven/ref/settings-docker.xml 
+INFO[0054] Taking snapshot of files...                  
+INFO[0054] RUN ln -s ${MAVEN_HOME}/bin/mvn /usr/bin/mvn 
+INFO[0054] Initializing snapshotter ...                 
+INFO[0054] Taking snapshot of full filesystem...        
+INFO[0063] Cmd: /bin/sh                                 
+INFO[0063] Args: [-c ln -s ${MAVEN_HOME}/bin/mvn /usr/bin/mvn] 
+INFO[0063] Running: [/bin/sh -c ln -s ${MAVEN_HOME}/bin/mvn /usr/bin/mvn] 
+INFO[0063] Taking snapshot of full filesystem...        
+INFO[0064] WORKDIR /usr/src/app                         
+INFO[0064] Cmd: workdir                                 
+INFO[0064] Changed working directory to /usr/src/app    
+INFO[0064] Creating directory /usr/src/app with uid -1 and gid -1 
+INFO[0064] Taking snapshot of files...                  
+INFO[0064] COPY . .                                     
+INFO[0064] Taking snapshot of files...                  
+INFO[0064] WORKDIR /usr/src/app/mobile-app              
+INFO[0064] Cmd: workdir                                 
+INFO[0064] Changed working directory to /usr/src/app/mobile-app 
+INFO[0064] Creating directory /usr/src/app/mobile-app with uid -1 and gid -1 
+INFO[0064] Taking snapshot of files...                  
+INFO[0064] RUN mvn clean install                        
+INFO[0064] Cmd: /bin/sh                                 
+INFO[0064] Args: [-c mvn clean install]                 
+INFO[0064] Running: [/bin/sh -c mvn clean install]      
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  0.090 s
+[INFO] Finished at: 2025-08-21T22:46:05Z
+[INFO] ------------------------------------------------------------------------
+[ERROR] The goal you specified requires a project to execute but there is no POM in this directory (/usr/src/app/mobile-app). Please verify you invoked Maven from the correct directory. -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MissingProjectException
+error building image: error building stage: failed to execute command: waiting for process to exit: exit status 1
+Cleaning up project directory and file based variables
+00:01
+ERROR: Job failed: command terminated with exit code 1
+
+
+
+
+RUN ln -s ${MAVEN_HOME}/bin/mvn /usr/bin/mvn
+
+WORKDIR /usr/src/app
+COPY . .
+
+WORKDIR /usr/src/app/mobile-app
+RUN mvn clean install
+RUN ls -la
+RUN cd ..
+
+ARG MAVEN_VERSION=3.9.4
+ARG USER_HOME_DIR="/root"
+ENV MAVEN_CONFIG "$USER_HOME_DIR/.m2"
+ENTRYPOINT ["/usr/local/bin/mvn-entrypoint.sh"]
+
+WORKDIR /usr/src/app
+COPY . .
+
+
+development:
+  tags:
+    - k8s-scalable
+  stage: development
+  dependencies:
+    - build
+  image:  $LZ_KANIKO_EXECUTOR_IMAGE
+  extends:
+    - .kaniko-login
+  before_script:
+    - apk add --no-cache git
+    - git clone git@gitlab.core-services.leaseplan.systems:workloads/0072-wkl-lpbr-apps/mobile-app.git
+    - cd mobile-app && git checkout develop && cd ..  
+  script:
+    - echo "Deploying to development environment"
+    - |
+      /kaniko/executor \
+        --context $CI_PROJECT_DIR \
+        --dockerfile $CI_PROJECT_DIR/$DOCKER_FILE \
+        --destination $DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:DEV-$VERSION
+  when: manual
+  environment:
+    name: development
+  only:
+    - develop
+
 include:
   - project: 'templates/gitlab-ci/pipelines'
     ref: master
