@@ -1,3 +1,9 @@
+Iniciando sync s3-integration-a-847447826148-sa-east-1/eCrlv/registros -> s3-integration-test-d-596599667803-sa-east-1/eCrlv/registros
+Cmd: aws s3 sync s3://s3-integration-a-847447826148-sa-east-1/eCrlv/registros s3://s3-integration-test-d-596599667803-sa-east-1/eCrlv/registros --only-show-errors --exact-timestamps --source-region sa-east-1 --region sa-east-1 --exclude "*.tmp"
+fatal error: An error occurred (AccessDenied) when calling the ListObjectsV2 operation: User: arn:aws:sts::596599667803:assumed-role/role-0072-d-eks-lpbr-access-s3/botocore-session-1755804014 is not authorized to perform: s3:ListBucket on resource: "arn:aws:s3:::s3-integration-a-847447826148-sa-east-1" because no resource-based policy allows the s3:ListBucket action
+stream closed EOF for data-transfer/s3-move-once-qpn42 (mover)
+
+
 #S3 resource
 module "aws_s3_integration" {
   source = "git@gitlab.core-services.leaseplan.systems:shared/terraform_modules/aws/aws-s3-bucket.git?ref=v5.0.0"
@@ -97,6 +103,7 @@ data "aws_iam_policy_document" "policy_eks_lpbr_access_s3_assume_role_policy" {
         "system:serviceaccount:workflow:lpbr-s3",
         "system:serviceaccount:glue-etl:lpbr-s3",
         "system:serviceaccount:ticketlog:lpbr-s3"
+        "system:serviceaccount:data-transfer:s3-mover"
       ]
     }
 
@@ -151,20 +158,6 @@ resource "aws_iam_role" "role_eks_lpbr_access_s3" {
   assume_role_policy   = data.aws_iam_policy_document.policy_eks_lpbr_access_s3_assume_role_policy.json
   tags                 = local.tags
 }
-
-
-# veja o SA no pod
-kubectl -n data-transfer get pod -l job-name=s3-move-once -o jsonpath='{.items[0].spec.serviceAccountName}{"\n"}'
-
-# confira as variáveis injetadas pelo webhook de IRSA
-kubectl -n data-transfer exec -it deploy/NAOEXISTE -- env | egrep 'AWS_(ROLE_ARN|WEB_IDENTITY_TOKEN_FILE)'
-# (rode no pod em execução; se o Job falhou, relance com backoffLimit=0 mesmo)
-
-
-Iniciando sync s3-integration-a-596599667803-sa-east-1/eCrlv/registros -> s3-integration-test-d-596599667803-sa-east-1/eCrlv/registros
-Cmd: aws s3 sync s3://s3-integration-a-596599667803-sa-east-1/eCrlv/registros s3://s3-integration-test-d-596599667803-sa-east-1/eCrlv/registros --only-show-errors --exact-timestamps --source-region sa-east-1 --region sa-east-1 --exclude "*.tmp"
-fatal error: An error occurred (AccessDenied) when calling the AssumeRoleWithWebIdentity operation: Not authorized to perform sts:AssumeRoleWithWebIdentity
-stream closed EOF for data-transfer/s3-move-once-qrpvl (mover)
 
 
 ---
