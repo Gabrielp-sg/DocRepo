@@ -1,0 +1,162 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatbot-agendamento
+  namespace: chatbot
+  labels:
+    app: chatbot-agendamento
+spec:
+  selector:
+    matchLabels:
+      app: chatbot-agendamento
+  template:
+    metadata:
+      labels:
+        app: chatbot-agendamento
+    spec:
+      containers:
+        - env:
+            - name: APPLICATION_PORT
+              value: "8080"
+            - name: POSTGRES_BOS_URL
+              valueFrom:
+                secretKeyRef:
+                  key: postgres-bos-url
+                  name: postgres-bos
+            - name: POSTGRES_BOS_PORT
+              valueFrom:
+                secretKeyRef:
+                  key: postgres-bos-port
+                  name: postgres-bos
+            - name: POSTGRES_BOS_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  key: postgres-bos-database
+                  name: postgres-bos
+            - name: POSTGRES_BOS_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: postgres-bos-username
+                  name: postgres-bos
+            - name: POSTGRES_BOS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: postgres-bos-password
+                  name: postgres-bos
+            - name: POSTGRES_SERVICES_URL
+              valueFrom:
+                secretKeyRef:
+                  key: postgres-services-url
+                  name: postgres-services
+            - name: POSTGRES_SERVICES_PORT
+              valueFrom:
+                secretKeyRef:
+                  key: postgres-services-port
+                  name: postgres-services
+            - name: POSTGRES_SERVICES_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  key: postgres-services-database
+                  name: postgres-services
+            - name: POSTGRES_SERVICES_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: postgres-services-username
+                  name: postgres-services
+            - name: POSTGRES_SERVICES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: postgres-services-password
+                  name: postgres-services
+            - name: DB2_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: db2-chatbot-username
+                  name: db2-chatbot
+            - name: DB2_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: db2-chatbot-password
+                  name: db2-chatbot
+            - name: DB2_LIBRARY
+              valueFrom:
+                secretKeyRef:
+                  key: db2-chatbot-library
+                  name: db2-chatbot
+            - name: SYDLEONE_URL
+              valueFrom:
+                secretKeyRef:
+                  key: sydleone-chatbot-url
+                  name: sydleone-chatbot
+            - name: SYDLEONE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: sydleone-chatbot-token
+                  name: sydleone-chatbot
+            - name: SUPPLIER_URL
+              valueFrom:
+                secretKeyRef:
+                  key: supplier-chatbot-url
+                  name: supplier-chatbot
+            - name: RMT_API_URL
+              valueFrom:
+                secretKeyRef:
+                  key: rmt-ticketlog-api-url
+                  name: rmt-ticketlog-api
+            - name: RMT_API_USER
+              valueFrom:
+                secretKeyRef:
+                  key: rmt-ticketlog-api-username
+                  name: rmt-ticketlog-api
+            - name: RMT_API_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: rmt-ticketlog-api-password
+                  name: rmt-ticketlog-api
+            - name: AWS_SQS_QUEUE_BLIP
+              value: "https://sqs.sa-east-1.amazonaws.com/596599667803/sqs-0072-d-sae1-std-chatbot"
+            - name: ERROR_URI
+              value: "http://error-message.error:8080/error/v1/code/"
+            - name: ISSUER_URI
+              value: "http://auth-token.auth:8080/"
+            - name: EVENT_URI
+              value: "http://event-log-event.event-log:8080/service/event/v1/log/criar"
+          name: chatbot-agendamento
+          image: 'cr.core-services.leaseplan.systems/0072/chatbot-agendamento:DEV-2.0.x8'
+          imagePullPolicy: Always
+          ports:
+          - containerPort: 8080
+          resources:
+            limits:
+              memory: "400Mi"
+              cpu: "100m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      serviceAccount: lpbr-sqs
+      serviceAccountName: lpbr-sqs
+      imagePullSecrets:
+        - name: harbor-docker-creds
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chatbot-agendamento
+  namespace: chatbot
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: chatbot-agendamento
+
+      

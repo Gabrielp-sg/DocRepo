@@ -1,0 +1,65 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: chatbot-blip-confirmacao
+  namespace: chatbot
+spec: 
+  schedule: "*/10 * * * *"
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 60
+  jobTemplate: 
+    spec: 
+      template: 
+        spec: 
+          containers:
+            - env:
+                - name: APPLICATION_PORT
+                  value: "8080"
+                - name: CHATBOT_URL
+                  valueFrom:
+                    secretKeyRef:
+                      key: blip-chatbot-url
+                      name: blip-chatbot
+                - name: CHATBOT_USERNAME
+                  valueFrom:
+                    secretKeyRef:
+                      key: blip-chatbot-username
+                      name: blip-chatbot
+                - name: CHATBOT_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      key: blip-chatbot-password
+                      name: blip-chatbot
+                - name: CHATBOT_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      key: blip-chatbot-key
+                      name: blip-chatbot
+                - name: AWS_SQS_QUEUE_BLIP
+                  value: "https://sqs.sa-east-1.amazonaws.com/596599667803/sqs-0072-d-sae1-std-chatbot"
+                - name: EVENT_URI
+                  value: "http://event-log-event.event-log:8080/service/event/v1/log/criar"
+              name: chatbot-blip-confirmacao
+              image: 'cr.core-services.leaseplan.systems/0072/chatbot-blip-confirmacao:DEV-2.0.x8'
+              imagePullPolicy: Always
+              ports:
+              - containerPort: 8080
+              resources:
+                limits:
+                  memory: "300Mi"
+                  cpu: "100m"
+              securityContext:
+                runAsNonRoot: true
+                runAsUser: 1001
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+          serviceAccount: lpbr-sqs
+          serviceAccountName: lpbr-sqs
+          imagePullSecrets:
+            - name: harbor-docker-creds
+          restartPolicy: Never

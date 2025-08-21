@@ -1,0 +1,76 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatbot-pedido
+  namespace: chatbot
+  labels:
+    app: chatbot-pedido
+spec:
+  selector:
+    matchLabels:
+      app: chatbot-pedido
+  template:
+    metadata:
+      labels:
+        app: chatbot-pedido
+    spec:
+      containers:
+        - env:
+            - name: APPLICATION_PORT
+              value: "8080"
+            - name: DB2_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: db2-chatbot-username
+                  name: db2-chatbot
+            - name: DB2_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: db2-chatbot-password
+                  name: db2-chatbot
+            - name: DB2_LIBRARY
+              valueFrom:
+                secretKeyRef:
+                  key: db2-chatbot-library
+                  name: db2-chatbot
+            - name: ERROR_URI
+              value: "http://error-message.error:8080/error/v1/code/"
+            - name: ISSUER_URI
+              value: "http://auth-token.auth:8080/"
+          name: chatbot-pedido
+          image: 'cr.core-services.leaseplan.systems/0072/chatbot-pedido:DEV-2.0.x8'
+          imagePullPolicy: Always
+          ports:
+          - containerPort: 8080
+          resources:
+            limits:
+              memory: "400Mi"
+              cpu: "100m"   
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      imagePullSecrets:
+        - name: harbor-docker-creds
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chatbot-pedido
+  namespace: chatbot
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: chatbot-pedido
+
+      

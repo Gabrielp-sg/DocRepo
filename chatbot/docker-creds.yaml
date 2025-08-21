@@ -1,0 +1,23 @@
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: harbor-docker-creds
+  namespace: chatbot
+spec:
+  data:
+  - remoteRef:
+      key: eks/0072-harbor
+    secretKey: dockercreds
+  refreshInterval: 1m0s
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: aws-secrets-manager
+  target:
+    creationPolicy: Owner
+    name: harbor-docker-creds
+    template:
+      data:
+        .dockerconfigjson: '{{ .dockercreds | toString }}'
+      engineVersion: v1
+      type: kubernetes.io/dockerconfigjson

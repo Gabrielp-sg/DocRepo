@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: chatbot
+resources:
+  - chatbot-cron-blip-confirmacao.yaml
+  - chatbot-cron-blip-envio-nps.yaml
+  - chatbot-hpa.yaml
+  - chatbot-ingress.yaml
+  - chatbot-secrets.yaml
+  - chatbot-svc-agendamento.yaml
+  - chatbot-svc-atendimento.yaml
+  - chatbot-svc-atualiza.yaml
+  - chatbot-serviceaccount.yaml
+  - chatbot-svc-consulta.yaml
+  - chatbot-svc-pedido.yaml
+  - namespace.yaml
+  - docker-creds.yaml
