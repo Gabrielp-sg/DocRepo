@@ -1,3 +1,11 @@
+# veja o SA no pod
+kubectl -n data-transfer get pod -l job-name=s3-move-once -o jsonpath='{.items[0].spec.serviceAccountName}{"\n"}'
+
+# confira as variáveis injetadas pelo webhook de IRSA
+kubectl -n data-transfer exec -it deploy/NAOEXISTE -- env | egrep 'AWS_(ROLE_ARN|WEB_IDENTITY_TOKEN_FILE)'
+# (rode no pod em execução; se o Job falhou, relance com backoffLimit=0 mesmo)
+
+
 Iniciando sync s3-integration-a-596599667803-sa-east-1/eCrlv/registros -> s3-integration-test-d-596599667803-sa-east-1/eCrlv/registros
 Cmd: aws s3 sync s3://s3-integration-a-596599667803-sa-east-1/eCrlv/registros s3://s3-integration-test-d-596599667803-sa-east-1/eCrlv/registros --only-show-errors --exact-timestamps --source-region sa-east-1 --region sa-east-1 --exclude "*.tmp"
 fatal error: An error occurred (AccessDenied) when calling the AssumeRoleWithWebIdentity operation: Not authorized to perform sts:AssumeRoleWithWebIdentity
