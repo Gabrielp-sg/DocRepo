@@ -1,3 +1,9 @@
+RUN set -eux; \
+  (apt-get update && apt-get install -y --no-install-recommends git ca-certificates) \
+  || (yum -y install git ca-certificates) \
+  || (microdnf -y install git ca-certificates) \
+  || (apk add --no-cache git ca-certificates)
+
 variables:
   # host e usuário para o clone via HTTPS
   GITLAB_HOST: gitlab.core-services.leaseplan.systems
