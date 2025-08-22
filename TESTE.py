@@ -1,3 +1,5 @@
+COPY --from=cr.core-services.leaseplan.systems/hub.docker.com/maven:3.9.4-eclipse-temurin-11 ${MAVEN_HOME} ${MAVEN_HOME}
+
 include:
   - project: 'templates/gitlab-ci/pipelines'
     ref: old-pipeline
