@@ -1,3 +1,81 @@
+variables:
+  # host e usuário para o clone via HTTPS
+  GITLAB_HOST: gitlab.core-services.leaseplan.systems
+  GITLAB_USER: gitlab-ci-token
+  # (opcional) flags do Kaniko para reduzir snapshotting de camadas
+  KANIKO_EXTRA_ARGS_BUILD: "--single-snapshot --use-new-run"
+
+build:
+  tags: [k8s-scalable]
+  stage: build
+  image: $LZ_KANIKO_EXECUTOR_IMAGE
+  extends: [.kaniko-login]
+  script:
+    - |
+      /kaniko/executor \
+        --context "$CI_PROJECT_DIR" \
+        --dockerfile "$CI_PROJECT_DIR/$DOCKER_FILE" \
+        --build-arg GITLAB_HOST="$GITLAB_HOST" \
+        --build-arg GITLAB_USER="$GITLAB_USER" \
+        --build-arg GITLAB_TOKEN="$CI_JOB_TOKEN" \
+        $KANIKO_EXTRA_ARGS_BUILD \
+        --no-push
+
+
+FROM cr.core-services.leaseplan.systems/hub.docker.com/amazoncorretto:21 as builder
+
+# --- ARGs só durante o build (não persistem como ENV)
+ARG GITLAB_HOST
+ARG GITLAB_USER
+ARG GITLAB_TOKEN
+
+# Git + CA básica (tenta apt/yum/microdnf/apk conforme a base)
+RUN set -eux; \
+  (apt-get update && apt-get install -y --no-install-recommends git ca-certificates) \
+  || (yum -y install git ca-certificates) \
+  || (microdnf -y install git ca-certificates) \
+  || (apk add --no-cache git ca-certificates)
+
+WORKDIR /usr/src/app
+# (Se sua rede exige CA corporativa para MITM/Proxy, adicione o .crt ao sistema e rode update-ca-certificates antes do clone.)
+
+# --- CLONE SEGURO EM UMA ÚNICA CAMADA: cria .netrc, clona e apaga
+ARG MOBILE_REPO_PATH="workloads/0072-wkl-lpbr-apps/mobile-app.git"
+RUN set -eux; \
+  umask 077; \
+  printf "machine %s\nlogin %s\npassword %s\n" "$GITLAB_HOST" "$GITLAB_USER" "$GITLAB_TOKEN" > /root/.netrc; \
+  git clone "https://$GITLAB_HOST/${MOBILE_REPO_PATH}" mobile-app; \
+  rm -f /root/.netrc; \
+  # opcional: não carregar histórico do git
+  rm -rf mobile-app/.git
+
+# (restante do seu build)
+# Maven - use o que você já tinha, ou alinhe com JDK 21
+ENV MAVEN_HOME=/usr/share/maven
+COPY --from=maven:3.9.9-eclipse-temurin-21 ${MAVEN_HOME} ${MAVEN_HOME}
+COPY --from=maven:3.9.9-eclipse-temurin-21 /usr/local/bin/mvn-entrypoint.sh /usr/local/bin/mvn-entrypoint.sh
+RUN ln -s ${MAVEN_HOME}/bin/mvn /usr/bin/mvn
+
+# Traga o código da sua app depois
+COPY . .
+
+# seus certificados Java, etc...
+RUN yes | keytool -trustcacerts -keystore "/usr/lib/jvm/java-21-amazon-corretto/lib/security/cacerts" -storepass changeit -importcert -file "/usr/src/app/certificados/ZscalerIntermediateRootCA-zscloud.net.crt" -alias ZScaler
+RUN yes | keytool -trustcacerts -keystore "/usr/lib/jvm/java-21-amazon-corretto/lib/security/cacerts" -storepass changeit -importcert -file "/usr/src/app/certificados/repo.maven.apache.org.crt" -alias RepoMaven
+
+# build do módulo clonado (se necessário)
+RUN set -eux; cd mobile-app && mvn -B -ntp clean install
+
+# build da sua app
+RUN mvn -B -ntp clean package
+
+FROM cr.core-services.leaseplan.systems/hub.docker.com/amazoncorretto:21-alpine-full
+ARG VERSION=2.0.x8
+COPY --from=builder /usr/src/app/chatbot-agendamento/target/chatbot-agendamento-${VERSION}.jar /usr
+ENTRYPOINT ["java","-jar","/usr/chatbot-agendamento-2.0.x8.jar"]
+
+
+
 prepare-mobile:
   stage: prepare
   image: alpine/git:latest
