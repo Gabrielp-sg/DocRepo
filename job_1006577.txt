@@ -1,3 +1,9 @@
+ARG GIT_TOKEN
+RUN yum install -y git
+RUN git clone https://${GIT_TOKEN}@gitlab.core-services.leaseplan.systems/workloads/0072-wkl-lpbr-apps/mobile-app.git
+WORKDIR /mobile-app
+RUN git checkout develop
+
 RUN yum install -y git
 RUN git clone https://gitlab.core-services.leaseplan.systems/workloads/0072-wkl-lpbr-apps/mobile-app.git
 
