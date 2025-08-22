@@ -1,3 +1,50 @@
+prepare-mobile:
+  stage: prepare
+  image: alpine/git:latest
+  script:
+    - git clone "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.core-services.leaseplan.systems/workloads/0072-wkl-lpbr-apps/mobile-app.git" mobile-app
+  artifacts:
+    paths:
+      - mobile-app/
+    expire_in: 1h
+
+
+build:
+  stage: build
+  image: $LZ_KANIKO_EXECUTOR_IMAGE
+  extends: [.kaniko-login]
+  dependencies: [prepare-mobile]
+  tags: [k8s-scalable]
+  script:
+    - |
+      /kaniko/executor \
+        --context $CI_PROJECT_DIR \
+        --dockerfile $CI_PROJECT_DIR/$DOCKER_FILE \
+        --no-push
+
+# --- builder
+FROM cr.core-services.leaseplan.systems/hub.docker.com/amazoncorretto:21 as builder
+# (opcional/boa prática) alinhar Maven com JDK 21
+COPY --from=maven:3.9.9-eclipse-temurin-21 /usr/share/maven /usr/share/maven
+COPY --from=maven:3.9.9-eclipse-temurin-21 /usr/local/bin/mvn-entrypoint.sh /usr/local/bin/mvn-entrypoint.sh
+ENV MAVEN_HOME=/usr/share/maven
+RUN ln -s ${MAVEN_HOME}/bin/mvn /usr/bin/mvn
+
+WORKDIR /usr/src/app
+COPY . .
+
+# seus imports de certificados aqui...
+RUN yes | keytool -trustcacerts -keystore "/usr/lib/jvm/java-21-amazon-corretto/lib/security/cacerts" -storepass changeit -importcert -file "/usr/src/app/certificados/ZscalerIntermediateRootCA-zscloud.net.crt" -alias ZScaler
+RUN yes | keytool -trustcacerts -keystore "/usr/lib/jvm/java-21-amazon-corretto/lib/security/cacerts" -storepass changeit -importcert -file "/usr/src/app/certificados/repo.maven.apache.org.crt" -alias RepoMaven
+
+# se precisar construir algo dentro de mobile-app:
+RUN cd mobile-app && mvn -B -ntp clean install
+
+# build do projeto principal
+RUN mvn -B -ntp clean package
+
+
+
 ARG GIT_TOKEN
 RUN yum install -y git
 RUN git clone https://${GIT_TOKEN}@gitlab.core-services.leaseplan.systems/workloads/0072-wkl-lpbr-apps/mobile-app.git
