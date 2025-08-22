@@ -1,4 +1,55 @@
 Complete!
+INFO[0093] Taking snapshot of full filesystem...        
+INFO[0108] RUN git clone "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.core-services.leaseplan.systems/workloads/0072-wkl-lpbr-apps/mobile-app.git" 
+INFO[0108] Cmd: /bin/sh                                 
+INFO[0108] Args: [-c git clone "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.core-services.leaseplan.systems/workloads/0072-wkl-lpbr-apps/mobile-app.git"] 
+INFO[0108] Running: [/bin/sh -c git clone "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.core-services.leaseplan.systems/workloads/0072-wkl-lpbr-apps/mobile-app.git"] 
+Cloning into 'mobile-app'...
+INFO[0108] Taking snapshot of full filesystem...        
+INFO[0113] RUN cd "mobile-app"                          
+INFO[0113] Cmd: /bin/sh                                 
+INFO[0113] Args: [-c cd "mobile-app"]                   
+INFO[0113] Running: [/bin/sh -c cd "mobile-app"]        
+INFO[0113] Taking snapshot of full filesystem...        
+INFO[0114] No files were changed, appending empty layer to config. No layer added to image. 
+INFO[0114] RUN git checkout develop                     
+INFO[0114] Cmd: /bin/sh                                 
+INFO[0114] Args: [-c git checkout develop]              
+INFO[0114] Running: [/bin/sh -c git checkout develop]   
+error: pathspec 'develop' did not match any file(s) known to git
+error building image: error building stage: failed to execute command: waiting for process to exit: exit status 1
+Cleaning up project directory and file based variables
+00:01
+ERROR: Job failed: command terminated with exit code 1
+
+
+WORKDIR /usr/src/app
+COPY . .
+
+RUN set -eux; \
+  (apt-get update && apt-get install -y --no-install-recommends git ca-certificates) \
+  || (yum -y install git ca-certificates) \
+  || (microdnf -y install git ca-certificates) \
+  || (apk add --no-cache git ca-certificates)
+
+
+RUN git clone "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.core-services.leaseplan.systems/workloads/0072-wkl-lpbr-apps/mobile-app.git"
+RUN cd "mobile-app"
+RUN git checkout develop
+RUN mvn clean install
+RUN ls -la
+RUN cd ..
+
+ARG MAVEN_VERSION=3.9.4
+ARG USER_HOME_DIR="/root"
+ENV MAVEN_CONFIG "$USER_HOME_DIR/.m2"
+ENTRYPOINT ["/usr/local/bin/mvn-entrypoint.sh"]
+
+WORKDIR /usr/src/app
+COPY . .
+
+
+Complete!
 INFO[0085] Taking snapshot of full filesystem...        
 INFO[0100] RUN git clone "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.core-services.leaseplan.systems/workloads/0072-wkl-lpbr-apps/mobile-app.git" 
 INFO[0100] Cmd: /bin/sh                                 
