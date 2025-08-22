@@ -1,3 +1,6 @@
+RUN yum install -y git
+RUN git clone https://gitlab.core-services.leaseplan.systems/workloads/0072-wkl-lpbr-apps/mobile-app.git
+
 Getting source from Git repository
 00:01
 Fetching changes with git depth set to 20...
