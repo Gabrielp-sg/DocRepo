@@ -1,3 +1,9 @@
+Iniciando sync s3-integration-a-847447826148-sa-east-1/eCrlv/registros -> s3-integration-test-d-596599667803-sa-east-1/eCrlv/registros
+Cmd: aws s3 sync s3://s3-integration-a-847447826148-sa-east-1/eCrlv/registros s3://s3-integration-test-d-596599667803-sa-east-1/eCrlv/registros --only-show-errors --exact-timestamps --source-region sa-east-1 --region sa-east-1 --exclude "*.tmp"
+fatal error: An error occurred (AccessDenied) when calling the AssumeRoleWithWebIdentity operation: Not authorized to perform sts:AssumeRoleWithWebIdentity
+stream closed EOF for data-transfer/s3-move-once-nqnww (mover)
+
+
 ---
 apiVersion: v1
 kind: Namespace
