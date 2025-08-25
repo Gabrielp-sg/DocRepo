@@ -1,3 +1,201 @@
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: chatbot-consulta
+  namespace: chatbot
+  labels:
+    app: chatbot-consulta
+spec:
+  maxReplicas: 3
+  minReplicas: 1
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: chatbot-consulta
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Pods
+        value: 2
+        periodSeconds: 15
+      selectPolicy: Max
+
+
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatbot-atendimento
+  namespace: chatbot
+  labels:
+    app: chatbot-atendimento
+spec:
+  selector:
+    matchLabels:
+      app: chatbot-atendimento
+  template:
+    metadata:
+      labels:
+        app: chatbot-atendimento
+    spec:
+      containers:
+        - env:
+            - name: APPLICATION_PORT
+              value: "8080"
+            - name: DB2_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: db2-chatbot-username
+                  name: db2-chatbot
+            - name: DB2_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: db2-chatbot-password
+                  name: db2-chatbot
+            - name: DB2_LIBRARY
+              valueFrom:
+                secretKeyRef:
+                  key: db2-chatbot-library
+                  name: db2-chatbot
+            - name: POSTGRES_SERVICES_URL
+              valueFrom:
+                secretKeyRef:
+                  key: postgres-services-url
+                  name: postgres-services
+            - name: POSTGRES_SERVICES_PORT
+              valueFrom:
+                secretKeyRef:
+                  key: postgres-services-port
+                  name: postgres-services
+            - name: POSTGRES_SERVICES_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  key: postgres-services-database
+                  name: postgres-services
+            - name: POSTGRES_SERVICES_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: postgres-services-username
+                  name: postgres-services
+            - name: POSTGRES_SERVICES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: postgres-services-password
+                  name: postgres-services
+            - name: SYDLEONE_URL
+              valueFrom:
+                secretKeyRef:
+                  key: sydleone-chatbot-url
+                  name: sydleone-chatbot
+            - name: SYDLEONE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: sydleone-chatbot-token
+                  name: sydleone-chatbot
+            - name: CHATBOT_URL
+              valueFrom:
+                secretKeyRef:
+                  key: blip-chatbot-url
+                  name: blip-chatbot
+            - name: CHATBOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: blip-chatbot-username
+                  name: blip-chatbot
+            - name: CHATBOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: blip-chatbot-password
+                  name: blip-chatbot
+            - name: CHATBOT_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: blip-chatbot-key
+                  name: blip-chatbot
+            - name: SUPPLIER_URL
+              valueFrom:
+                secretKeyRef:
+                  key: supplier-chatbot-url
+                  name: supplier-chatbot
+            - name: RMT_API_URL
+              valueFrom:
+                secretKeyRef:
+                  key: rmt-ticketlog-api-url
+                  name: rmt-ticketlog-api
+            - name: RMT_API_USER
+              valueFrom:
+                secretKeyRef:
+                  key: rmt-ticketlog-api-username
+                  name: rmt-ticketlog-api
+            - name: RMT_API_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: rmt-ticketlog-api-password
+                  name: rmt-ticketlog-api
+            - name: ERROR_URI
+              value: "http://error-message.error:8080/error/v1/code/"
+            - name: ISSUER_URI
+              value: "http://auth-token.auth:8080/"
+            - name: EVENT_URI
+              value: "http://event-log-event.event-log:8080/service/event/v1/log/criar"
+          name: chatbot-atendimento
+          image: 'cr.core-services.leaseplan.systems/0072/chatbot-atendimento:DEV-2.0.x9'
+          imagePullPolicy: Always
+          ports:
+          - containerPort: 8080
+          resources:
+            requests:
+              memory: "400Mi"
+              cpu: "100m"
+            limits:
+              memory: "400Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      imagePullSecrets:
+        - name: harbor-docker-creds
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chatbot-atendimento
+  namespace: chatbot
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: chatbot-atendimento
+
+      
+
+
+
 metadata:
   annotations:
     alb.ingress.kubernetes.io/load-balancer-attributes: >-
@@ -82,4 +280,5 @@ FROM pg_stat_activity
 WHERE now() - query_start < interval '5 minutes'
 ORDER BY query_start DESC
 LIMIT 50;
+
 
