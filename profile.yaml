@@ -1,3 +1,14 @@
+metadata:
+  annotations:
+    alb.ingress.kubernetes.io/load-balancer-attributes: >-
+      routing.http.drop_invalid_header_fields.enabled=true,
+      access_logs.s3.enabled=true,
+      access_logs.s3.bucket=plt-elb-logs-596599667803-sa-east-1,
+      access_logs.s3.prefix=alb,
+      idle_timeout.timeout_seconds=180,
+      routing.http.preserve_host_header.enabled=true
+
+
 # 1.1 – veja para onde o DNS ACC aponta
 dig +short chatbot.acc.lpbr.leaseplan.systems
 
@@ -71,3 +82,4 @@ FROM pg_stat_activity
 WHERE now() - query_start < interval '5 minutes'
 ORDER BY query_start DESC
 LIMIT 50;
+
