@@ -68,8 +68,7 @@ spec:
             - name: DRIVER_API_BASE_URL_CONDUTOR
               value: "http://aldavar-driver-check-update.aldavar:8080/"
           name: chatbot-atualiza
-          image: 'cr.core-services.leaseplan.systems/0072/chatbot-atualiza:DEV-2.0.x8'
-          imagePullPolicy: Always
+          image: 'cr.core-services.leaseplan.systems/0072/chatbot-atualiza:RELEASE-2.0.x9'
           ports:
           - containerPort: 8080
           resources:
@@ -102,4 +101,3 @@ spec:
   selector:
     app: chatbot-atualiza
 
-      

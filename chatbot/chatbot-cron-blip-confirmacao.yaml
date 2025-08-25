@@ -9,7 +9,6 @@ spec:
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 2
   concurrencyPolicy: Forbid
-  startingDeadlineSeconds: 60
   jobTemplate: 
     spec: 
       template: 
@@ -39,12 +38,11 @@ spec:
                       key: blip-chatbot-key
                       name: blip-chatbot
                 - name: AWS_SQS_QUEUE_BLIP
-                  value: "https://sqs.sa-east-1.amazonaws.com/596599667803/sqs-0072-d-sae1-std-chatbot"
+                  value: "https://sqs.sa-east-1.amazonaws.com/847447826148/sqs-0072-a-sae1-std-chatbot"
                 - name: EVENT_URI
                   value: "http://event-log-event.event-log:8080/service/event/v1/log/criar"
               name: chatbot-blip-confirmacao
-              image: 'cr.core-services.leaseplan.systems/0072/chatbot-blip-confirmacao:DEV-2.0.x8'
-              imagePullPolicy: Always
+              image: 'cr.core-services.leaseplan.systems/0072/chatbot-blip-confirmacao:RELEASE-2.0.x9'
               ports:
               - containerPort: 8080
               resources:

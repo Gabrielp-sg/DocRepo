@@ -116,8 +116,7 @@ spec:
             - name: EVENT_URI
               value: "http://event-log-event.event-log:8080/service/event/v1/log/criar"
           name: chatbot-atendimento
-          image: 'cr.core-services.leaseplan.systems/0072/chatbot-atendimento:DEV-2.0.x8'
-          imagePullPolicy: Always
+          image: 'cr.core-services.leaseplan.systems/0072/chatbot-atendimento:RELEASE-2.0.x9'
           ports:
           - containerPort: 8080
           resources:
